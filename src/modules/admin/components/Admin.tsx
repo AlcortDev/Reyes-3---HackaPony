@@ -133,7 +133,7 @@ export function RevisionTienda({ tienda }: { tienda: RevisionDTO }) {
               href={`https://www.openstreetmap.org/?mlat=${tienda.lat}&mlon=${tienda.lng}#map=19/${tienda.lat}/${tienda.lng}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-accent underline underline-offset-4"
+              className="inline-flex items-center gap-1 text-sm text-link underline underline-offset-4"
             >
               Ver en OpenStreetMap <ExternalLink className="size-4" aria-hidden />
             </a>

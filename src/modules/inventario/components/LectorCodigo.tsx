@@ -6,7 +6,11 @@ import { Camera, ScanBarcode, X } from "lucide-react";
 import type { Html5Qrcode } from "html5-qrcode";
 import { buscarInventarioPorCodigo } from "../codigos";
 import { capturaVigente, detenerStream } from "../camara";
-import estilos from "./inventario.module.css";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
 /** [RF-INV-10] Leer nunca registra una venta: abre el producto para elegir la acción. */
 export function LectorCodigo({ bloqueado, onAbiertoChange }: { bloqueado: boolean; onAbiertoChange: (abierto: boolean) => void }) {
@@ -124,36 +128,46 @@ export function LectorCodigo({ bloqueado, onAbiertoChange }: { bloqueado: boolea
     ocupado.current = false; setFase("listo"); setError(null); setAbierto(false); onAbiertoChange(false);
   }
 
-  if (!abierto) return <button type="button" className={estilos.botonSecundario} disabled={bloqueado}
+  if (!abierto) return <Button type="button" variant="outline" disabled={bloqueado}
     aria-expanded={false} onClick={() => {
       generacion.current++; setApertura(a => a + 1); setAbierto(true); onAbiertoChange(true);
     }}>
-    <ScanBarcode aria-hidden="true" size={20} /> Buscar por código
-  </button>;
+    <ScanBarcode aria-hidden="true" data-icon="inline-start" /> Buscar por código
+  </Button>;
 
   return (
-    <section className={estilos.lector} aria-label="Buscar producto por código">
-      <div className={estilos.lectorTitulo}>
-        <h2>Buscar por código</h2>
-        <button type="button" aria-label="Cerrar lector" className={estilos.cerrarLector} onClick={cerrar}><X aria-hidden="true" size={20} /></button>
-      </div>
-      <p>Escanea o escribe el código. Después elige vender o surtir.</p>
-      <form className={estilos.formCantidad} onSubmit={event => { event.preventDefault(); void buscar(codigo); }}>
-        <label htmlFor={`${id}-codigo`}>Código de barras</label>
-        <input id={`${id}-codigo`} name="codigo" autoComplete="off" maxLength={128} required value={codigo}
-          disabled={fase !== "listo" || bloqueado} onChange={event => setCodigo(event.target.value)} />
-        <button type="submit" className={estilos.botonPrimario} disabled={fase !== "listo" || bloqueado}>
-          {fase === "buscando" ? "Buscando…" : "Buscar producto"}
-        </button>
-      </form>
-      <video ref={video} className={estilos.videoLector} muted playsInline hidden={fase !== "camara" && fase !== "iniciando"} />
-      <div id={id} className={estilos.decodificador} aria-hidden="true" />
-      {fase === "camara" ? <button type="button" className={estilos.botonSecundario}
-        onClick={() => { void detenerCamara().catch(() => {}); }}>Detener cámara</button>
-        : <button type="button" className={estilos.botonSecundario} disabled={fase !== "listo" || bloqueado} onClick={() => void iniciarCamara()}>
-          <Camera aria-hidden="true" size={20} />{fase === "iniciando" ? "Abriendo cámara…" : "Usar cámara"}
-        </button>}
-      {error && <p role="alert" className={estilos.critico}>{error}</p>}
+    <section aria-label="Buscar producto por código">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle><h2 className="text-lg font-bold">Buscar por código</h2></CardTitle>
+            <Button type="button" variant="ghost" size="icon" aria-label="Cerrar lector" onClick={cerrar}><X aria-hidden="true" /></Button>
+          </div>
+          <CardDescription>Escanea o escribe el código. Después elige vender o surtir.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <form className="flex flex-col gap-3" onSubmit={event => { event.preventDefault(); void buscar(codigo); }}>
+            <FieldGroup>
+              <Field data-disabled={fase !== "listo" || bloqueado}>
+                <FieldLabel htmlFor={`${id}-codigo`}>Código de barras</FieldLabel>
+                <Input id={`${id}-codigo`} name="codigo" autoComplete="off" maxLength={128} required value={codigo}
+                  disabled={fase !== "listo" || bloqueado} onChange={event => setCodigo(event.target.value)} />
+              </Field>
+            </FieldGroup>
+            <Button type="submit" disabled={fase !== "listo" || bloqueado}>
+              {fase === "buscando" ? "Buscando…" : "Buscar producto"}
+            </Button>
+          </form>
+          <video ref={video} className="max-h-60 w-full rounded-lg object-cover" muted playsInline hidden={fase !== "camara" && fase !== "iniciando"} />
+          <div id={id} className="hidden" aria-hidden="true" />
+          {fase === "camara" ? <Button type="button" variant="outline"
+            onClick={() => { void detenerCamara().catch(() => {}); }}>Detener cámara</Button>
+            : <Button type="button" variant="outline" disabled={fase !== "listo" || bloqueado} onClick={() => void iniciarCamara()}>
+              <Camera aria-hidden="true" data-icon="inline-start" />{fase === "iniciando" ? "Abriendo cámara…" : "Usar cámara"}
+            </Button>}
+          {error && <Alert variant="destructive"><AlertTitle>{error}</AlertTitle></Alert>}
+        </CardContent>
+      </Card>
     </section>
   );
 }

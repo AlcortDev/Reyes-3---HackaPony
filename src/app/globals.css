@@ -38,6 +38,7 @@
   --accent-foreground: #ffffff;
   --accent-strong: var(--brand-accent-strong);
   --accent-strong-foreground: #ffffff;
+  --link: var(--brand-accent-strong);
   --info-surface: #eaf3fb;
   --surface-highlight: var(--brand-foreground);
   --surface-highlight-foreground: var(--brand-secondary);
@@ -87,6 +88,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-strong: var(--accent-strong);
   --color-accent-strong-foreground: var(--accent-strong-foreground);
+  --color-link: var(--link);
   --color-info-surface: var(--info-surface);
   --color-surface-highlight: var(--surface-highlight);
   --color-surface-highlight-foreground: var(--surface-highlight-foreground);

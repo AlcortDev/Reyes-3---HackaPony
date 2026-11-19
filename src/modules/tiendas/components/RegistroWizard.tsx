@@ -160,7 +160,7 @@ export function RegistroWizard() {
           <span>
             Paso {paso + 1} de {PASOS.length}
           </span>
-          <Link href="/login" className="text-accent underline underline-offset-4">
+          <Link href="/login" className="text-link underline underline-offset-4">
             Ya tengo cuenta
           </Link>
         </div>
@@ -280,7 +280,7 @@ export function RegistroWizard() {
               <input type="checkbox" name="aceptaPrivacidad" className="mt-1 size-6 shrink-0 accent-[var(--primary)]" aria-invalid={!!errores.aceptaPrivacidad} />
               <span className="text-base">
                 Leí y acepto el{" "}
-                <Link href="/privacidad" target="_blank" className="text-accent underline underline-offset-4">
+                <Link href="/privacidad" target="_blank" className="text-link underline underline-offset-4">
                   aviso de privacidad
                 </Link>
                 .

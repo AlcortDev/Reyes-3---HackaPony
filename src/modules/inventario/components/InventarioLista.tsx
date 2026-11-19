@@ -1,20 +1,28 @@
 "use client";
 // [RF-INV-01…05, RNF-01…06] Inventario móvil, con movimientos confirmados.
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { AlertTriangle, ArrowRight, PackageOpen, Search } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Separator } from "@/components/ui/separator";
 import type { ItemInventarioDTO } from "../types";
 import { ControlesStock } from "./ControlesStock";
 import { ProductoEncabezado } from "./ProductoEncabezado";
 import { useInventario } from "./useInventario";
 import { LectorCodigo } from "./LectorCodigo";
-import estilos from "./inventario.module.css";
 
 export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
   const estado = useInventario(items);
   const [busqueda, setBusqueda] = useState("");
   const [soloPorSurtir, setSoloPorSurtir] = useState(false);
   const [lectorAbierto, setLectorAbierto] = useState(false);
+  const filtroId = useId();
   const normalizar = (texto: string) => texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("es-MX");
   const texto = normalizar(busqueda.trim());
   const prioridad = { critico: 0, bajo: 1, ok: 2 };
@@ -23,57 +31,71 @@ export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
   ).sort((a, b) => prioridad[a.nivel] - prioridad[b.nivel] || a.nombre.localeCompare(b.nombre, "es-MX"));
   const porAgotarse = estado.items.filter((i) => i.nivel === "critico").length;
   return (
-    <section className={estilos.modulo}>
-      <header className={estilos.titulo}>
-        <h1>Mi inventario</h1>
-        <p>Una venta con −. Un surtido con +.</p>
+    <section className="flex min-w-0 flex-col gap-5">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-3xl font-extrabold tracking-tight text-secondary">Mi inventario</h1>
+        <p className="text-muted-foreground">Una venta con −. Un surtido con +.</p>
       </header>
       {porAgotarse > 0 && (
-        <p className={estilos.alertaStock} role="status">
-          <AlertTriangle aria-hidden="true" size={20} />
-          {`${porAgotarse} producto${porAgotarse === 1 ? "" : "s"} por agotarse`}
-        </p>
+        <Alert variant="warning" role="status">
+          <AlertTriangle aria-hidden="true" />
+          <AlertTitle>{`${porAgotarse} producto${porAgotarse === 1 ? "" : "s"} por agotarse`}</AlertTitle>
+          <AlertDescription>Revisa los que necesitan surtido primero.</AlertDescription>
+        </Alert>
       )}
       {items.length > 0 && (
-        <div className={estilos.filtros}>
-          <label className={estilos.buscador}>
-            <Search aria-hidden="true" size={20} /><span className="sr-only">Buscar producto</span>
-            <input type="search" placeholder="Buscar producto" value={busqueda}
-              onChange={(event) => setBusqueda(event.target.value)} />
-          </label>
-          <label className={estilos.filtroCheck}>
-            <input type="checkbox" checked={soloPorSurtir} onChange={(event) => setSoloPorSurtir(event.target.checked)} />
-            Por surtir
-          </label>
+        <div className="flex flex-col gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-x-4">
+          <InputGroup>
+            <InputGroupInput type="search" aria-label="Buscar producto" placeholder="Buscar producto"
+              value={busqueda} onChange={(event) => setBusqueda(event.target.value)} />
+            <InputGroupAddon><Search aria-hidden="true" /></InputGroupAddon>
+          </InputGroup>
+          <Field orientation="horizontal" className="w-fit gap-2">
+            <Checkbox id={filtroId} checked={soloPorSurtir} onCheckedChange={(valor) => setSoloPorSurtir(valor === true)} />
+            <FieldLabel htmlFor={filtroId} className="min-h-11 cursor-pointer">Por surtir</FieldLabel>
+          </Field>
+          <div className="lg:col-span-2"><LectorCodigo bloqueado={estado.bloqueado} onAbiertoChange={setLectorAbierto} /></div>
         </div>
       )}
-      {items.length > 0 && <LectorCodigo bloqueado={estado.bloqueado} onAbiertoChange={setLectorAbierto} />}
       {estado.aviso && (
-        <div className={estilos.avisoError} role="alert">
-          <p>{estado.aviso.texto}</p>
-          {estado.aviso.incierto && <button type="button" className={estilos.enlaceBoton}
-            onClick={() => window.location.reload()}>Actualizar inventario</button>}
-        </div>
+        <Alert variant="destructive">
+          <AlertTriangle aria-hidden="true" />
+          <AlertTitle>{estado.aviso.texto}</AlertTitle>
+          {estado.aviso.incierto && <AlertDescription>
+            <Button type="button" variant="outline" onClick={() => window.location.reload()}>Actualizar inventario</Button>
+          </AlertDescription>}
+        </Alert>
       )}
-      <ul className={estilos.lista} aria-label="Productos de tu tienda">
+      <ul className="grid gap-4 lg:grid-cols-2 lg:items-start" aria-label="Productos de tu tienda">
         {visibles.map((item) => (
-          <li key={item.id} className={estilos.tarjeta}>
-            <ProductoEncabezado item={item} />
-            <ControlesStock item={item} bloqueado={estado.bloqueado || lectorAbierto} pendiente={estado.pendiente === item.id} guardar={estado.guardar} />
-            <Link href={`/inventario/${item.id}`} className={estilos.verDetalle}>
-              Ver detalle y opciones para surtir <ArrowRight aria-hidden="true" size={18} />
-            </Link>
+          <li key={item.id} className="h-full">
+            <Card className="h-full">
+              <CardHeader><ProductoEncabezado item={item} /></CardHeader>
+              <CardContent>
+                <ControlesStock item={item} bloqueado={estado.bloqueado || lectorAbierto} pendiente={estado.pendiente === item.id} guardar={estado.guardar} />
+              </CardContent>
+              <CardFooter className="mt-auto flex-col items-stretch gap-2">
+                <Separator />
+                <Button asChild variant="link" className="h-auto min-h-12 justify-between px-0 whitespace-normal text-left">
+                  <Link href={`/inventario/${item.id}`}>
+                    Ver detalle y opciones para surtir <ArrowRight aria-hidden="true" data-icon="inline-end" />
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
           </li>
         ))}
       </ul>
       {visibles.length === 0 && (
-        <div className={estilos.vacio}>
-          <PackageOpen aria-hidden="true" size={30} />
-          <h2>{items.length === 0 ? "Todavía no hay productos en tu inventario" : "No encontramos productos con ese filtro"}</h2>
-          <p>{items.length === 0 ? "Aquí aparecerán los productos asignados a tu tienda." : "Prueba otro nombre o revisa todos tus productos."}</p>
-          {items.length > 0 && <button type="button" className={estilos.botonSecundario}
-            onClick={() => { setBusqueda(""); setSoloPorSurtir(false); }}>Ver todos los productos</button>}
-        </div>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon"><PackageOpen aria-hidden="true" /></EmptyMedia>
+            <EmptyTitle>{items.length === 0 ? "Todavía no hay productos en tu inventario" : "No encontramos productos con ese filtro"}</EmptyTitle>
+            <EmptyDescription>{items.length === 0 ? "Aquí aparecerán los productos asignados a tu tienda." : "Prueba otro nombre o revisa todos tus productos."}</EmptyDescription>
+          </EmptyHeader>
+          {items.length > 0 && <EmptyContent><Button type="button" variant="outline"
+            onClick={() => { setBusqueda(""); setSoloPorSurtir(false); }}>Ver todos los productos</Button></EmptyContent>}
+        </Empty>
       )}
     </section>
   );

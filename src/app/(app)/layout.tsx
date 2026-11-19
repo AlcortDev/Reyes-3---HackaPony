@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: Readonly<{ children: React
       <MenuLateral nombre={tienda.nombre} />
       <div className="min-w-0">
         <HeaderTienda nombre={tienda.nombre} />
-        <main className="mx-auto w-full max-w-md px-4 pt-5 pb-32 lg:max-w-5xl lg:px-10 lg:pt-10 lg:pb-12">{children}</main>
+        <main className="mx-auto w-full max-w-md px-4 pt-5 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:max-w-5xl lg:px-10 lg:pt-10 lg:pb-12">{children}</main>
       </div>
       <Navbar />
     </div>

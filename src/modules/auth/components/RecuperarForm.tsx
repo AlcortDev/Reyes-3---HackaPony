@@ -59,7 +59,7 @@ export function RecuperarForm() {
           </form>
         )}
         <p className="text-center">
-          <Link href="/login" className="text-accent underline underline-offset-4">
+          <Link href="/login" className="text-link underline underline-offset-4">
             Volver a entrar
           </Link>
         </p>

@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ArrowLeft, ArrowRight, Clock3, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Clock3, Users } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import type { VaquitaDTO } from "@/modules/vaquitas";
 import { formatoFechaHora, formatoMoneda } from "@/shared/utils";
 import type { DetalleInventarioDTO } from "../types";
 import { ControlesStock } from "./ControlesStock";
 import { ProductoEncabezado } from "./ProductoEncabezado";
 import { useInventario } from "./useInventario";
-import estilos from "./inventario.module.css";
 
 interface Props {
   detalle: DetalleInventarioDTO;
@@ -23,67 +26,71 @@ export function DetalleInventarioContenido({ detalle, vaquita, consultaFallida }
   const item = estado.items[0];
 
   return (
-    <section className={estilos.modulo}>
-      <Link href="/inventario" className={estilos.volver}><ArrowLeft aria-hidden="true" size={18} />Volver al inventario</Link>
-      <header className={estilos.detalleTitulo}>
-        <h1>{detalle.nombre}</h1>
-        <p>{detalle.categoria} · {formatoMoneda(detalle.precioMenudeo)} por {detalle.unidad}</p>
+    <section className="flex min-w-0 flex-col gap-5">
+      <Button asChild variant="link" className="self-start px-0">
+        <Link href="/inventario"><ArrowLeft aria-hidden="true" data-icon="inline-start" />Volver al inventario</Link>
+      </Button>
+      <header className="flex flex-col gap-1">
+        <h1 className="text-3xl font-extrabold tracking-tight text-secondary wrap-anywhere">{detalle.nombre}</h1>
+        <p className="text-muted-foreground">{detalle.categoria} · {formatoMoneda(detalle.precioMenudeo)} por {detalle.unidad}</p>
       </header>
       {estado.aviso && (
-        <div className={estilos.avisoError} role="alert">
-          <p>{estado.aviso.texto}</p>
-          {estado.aviso.incierto && <button type="button" className={estilos.enlaceBoton}
-            onClick={() => window.location.reload()}>Actualizar inventario</button>}
-        </div>
+        <Alert variant="destructive">
+          <AlertTriangle aria-hidden="true" />
+          <AlertTitle>{estado.aviso.texto}</AlertTitle>
+          {estado.aviso.incierto && <AlertDescription>
+            <Button type="button" variant="outline" onClick={() => window.location.reload()}>Actualizar inventario</Button>
+          </AlertDescription>}
+        </Alert>
       )}
-      <div className={estilos.tarjeta}>
-        <ProductoEncabezado item={item} />
-        <ControlesStock item={item} bloqueado={estado.bloqueado} pendiente={estado.pendiente === item.id} guardar={estado.guardar} />
-        <p className={estilos.prediccion}>
-          <Clock3 aria-hidden="true" size={19} />
-          {detalle.diasParaAgotarse === null ? "Sin datos suficientes para estimar cuándo se acaba."
-            : detalle.diasParaAgotarse === 0 ? "A este ritmo, podría acabarse hoy."
-              : `A este ritmo, se te acaba en ~${detalle.diasParaAgotarse} día${detalle.diasParaAgotarse === 1 ? "" : "s"}.`}
-        </p>
-      </div>
-      {item.nivel === "critico" && vaquita && (
-        <aside className={estilos.oportunidad} aria-label="Opción para surtir en grupo">
-          <h2><Users aria-hidden="true" size={20} className="inline" /> Surtir con otras tiendas</h2>
-          <p>Faltan {vaquita.faltan} unidades para alcanzar el precio de mayoreo.</p>
-          <p>Te ahorras <strong>{formatoMoneda(vaquita.precioMenudeo - vaquita.precioMayoreo)}</strong> por {detalle.unidad}.</p>
-          <Link href={`/vaquitas/${vaquita.id}`} className={estilos.botonPrimario}>
-            Unirme a la vaquita <ArrowRight aria-hidden="true" size={18} />
-          </Link>
+      <Card>
+        <CardHeader><ProductoEncabezado item={item} /></CardHeader>
+        <CardContent><ControlesStock item={item} bloqueado={estado.bloqueado} pendiente={estado.pendiente === item.id} guardar={estado.guardar} /></CardContent>
+        <CardFooter className="flex-col items-stretch gap-4">
+          <Separator />
+          <p className="flex items-start gap-2 text-muted-foreground">
+            <Clock3 aria-hidden="true" size={20} className="mt-0.5 shrink-0 text-accent-strong" />
+            {detalle.diasParaAgotarse === null ? "Sin datos suficientes para estimar cuándo se acaba."
+              : detalle.diasParaAgotarse === 0 ? "A este ritmo, podría acabarse hoy."
+                : `A este ritmo, se te acaba en ~${detalle.diasParaAgotarse} día${detalle.diasParaAgotarse === 1 ? "" : "s"}.`}
+          </p>
+        </CardFooter>
+      </Card>
+      {item.nivel === "critico" && (vaquita || !consultaFallida) && (
+        <aside aria-label={vaquita ? "Opción para surtir en grupo" : "Crear compra en grupo"}>
+          <Card variant="highlight">
+            <CardHeader>
+              <CardTitle><h2 className="flex items-center gap-2 text-lg font-bold"><Users aria-hidden="true" size={22} />Surtir con otras tiendas</h2></CardTitle>
+              <CardDescription>{vaquita ? `Faltan ${vaquita.faltan} unidades para alcanzar el precio de mayoreo.` : "Aún no hay una vaquita abierta para este producto."}</CardDescription>
+            </CardHeader>
+            {vaquita && <CardContent><p>Te ahorras <strong>{formatoMoneda(vaquita.precioMenudeo - vaquita.precioMayoreo)}</strong> por {detalle.unidad}.</p></CardContent>}
+            <CardFooter>
+              <Button asChild variant="accent" className="w-full">
+                <Link href={vaquita ? `/vaquitas/${vaquita.id}` : `/vaquitas?productoId=${encodeURIComponent(detalle.productoId)}`}>
+                  {vaquita ? "Unirme a la vaquita" : "Armar una vaquita"}<ArrowRight aria-hidden="true" data-icon="inline-end" />
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
         </aside>
       )}
-      {item.nivel === "critico" && !vaquita && !consultaFallida && (
-        <aside className={estilos.oportunidad} aria-label="Crear compra en grupo">
-          <h2>Surtir con otras tiendas</h2>
-          <p>Aún no hay una vaquita abierta para este producto.</p>
-          <Link href={`/vaquitas?productoId=${encodeURIComponent(detalle.productoId)}`} className={estilos.botonPrimario}>
-            Armar una vaquita <ArrowRight aria-hidden="true" size={18} />
-          </Link>
-        </aside>
-      )}
-      {item.nivel === "critico" && consultaFallida && <p role="status">No pudimos consultar las vaquitas. Vuelve a abrir el detalle para revisarlas.</p>}
-      <section className={estilos.historial} aria-labelledby="titulo-movimientos">
-        <h2 id="titulo-movimientos">Movimientos recientes</h2>
-        {detalle.movimientos.length === 0 ? <p>Aún no registras movimientos de este producto.</p> : (
-          <ul className={estilos.movimientos}>
+      {item.nivel === "critico" && consultaFallida && <p role="status" className="text-muted-foreground">No pudimos consultar las vaquitas. Vuelve a abrir el detalle para revisarlas.</p>}
+      <section className="flex flex-col gap-3" aria-labelledby="titulo-movimientos">
+        <h2 id="titulo-movimientos" className="text-xl font-bold">Movimientos recientes</h2>
+        {detalle.movimientos.length === 0 ? <p className="text-muted-foreground">Aún no registras movimientos de este producto.</p> : (
+          <ul className="flex flex-col">
             {detalle.movimientos.map((movimiento) => (
-              <li key={movimiento.id}>
+              <li key={movimiento.id} className="flex items-start justify-between gap-3 border-b py-4">
                 <div>
-                  <span>{movimiento.tipo === "ENTRADA" ? "Surtido" : "Salida"}</span>
-                  <time dateTime={movimiento.fecha}>{formatoFechaHora(movimiento.fecha)}</time>
+                  <span className="font-semibold">{movimiento.tipo === "ENTRADA" ? "Surtido" : "Salida"}</span>
+                  <time className="block text-muted-foreground" dateTime={movimiento.fecha}>{formatoFechaHora(movimiento.fecha)}</time>
                 </div>
-                <strong className={movimiento.tipo === "ENTRADA" ? estilos.bien : undefined}>
-                  {movimiento.tipo === "ENTRADA" ? "+" : "−"}{movimiento.cantidad}
-                </strong>
+                <strong className="text-secondary tabular-nums">{movimiento.tipo === "ENTRADA" ? "+" : "−"}{movimiento.cantidad}</strong>
               </li>
             ))}
           </ul>
         )}
-        {detalle.movimientos.length === 20 && <p>Se muestran los últimos 20 movimientos.</p>}
+        {detalle.movimientos.length === 20 && <p className="text-muted-foreground">Se muestran los últimos 20 movimientos.</p>}
       </section>
     </section>
   );

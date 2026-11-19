@@ -23,7 +23,7 @@ export function HeaderTienda({ nombre }: { nombre: string }) {
   return (
     <header className="sticky top-0 z-40 border-b bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur lg:hidden">
       <div className="mx-auto flex h-16 max-w-md items-center justify-between gap-2 px-4">
-        <Link href="/perfil" className="flex min-w-0 items-center gap-2.5" aria-label={`Perfil de ${nombre}`}>
+        <Link href="/perfil" className="flex min-h-11 min-w-0 items-center gap-2.5" aria-label={`Perfil de ${nombre}`}>
           <IconoVaquita className="size-9 shrink-0" />
           <span className="truncate font-display text-xl font-bold">{nombre}</span>
         </Link>
@@ -50,14 +50,14 @@ export function MenuLateral({ nombre }: { nombre: string }) {
           <Iniciales nombre={nombre} />
           <span className="min-w-0">
             <span className="block truncate font-semibold">{nombre}</span>
-            <span className="text-sm text-white/70">Ver mi perfil</span>
+            <span className="text-base text-white/70">Ver mi perfil</span>
           </span>
         </Link>
 
         <NavLateral />
 
         <div className="mt-auto space-y-4">
-          <p className="rounded-xl border border-white/15 p-3 text-sm text-white/75">
+          <p className="rounded-xl border border-white/15 p-3 text-base text-white/75">
             Junta tu pedido con las tiendas de tu colonia y paga precio de mayoreo.
           </p>
           <div className="[&_button]:w-full [&_button]:justify-start [&_button]:text-white/85 [&_button:hover]:bg-white/10 [&_button:hover]:text-white">
