@@ -22,6 +22,17 @@
 
 ---
 
+## 🛠️ Stack Tecnológico
+* **Framework Fullstack:** Next.js (ya incluye React de forma nativa)
+* **Lenguaje:** TypeScript (esencial para aprovechar Prisma, shadcn y Better Auth al 100%)
+* **Estilos:** Tailwind CSS
+* **Componentes UI:** shadcn/ui
+* **Base de datos:** PostgreSQL
+* **ORM:** Prisma
+* **Autenticación:** Better Auth
+
+---
+
 ## ⏱️ Tiempo de Desarrollo y Reglas de Exposición
 
 ### Tiempo límite de desarrollo
