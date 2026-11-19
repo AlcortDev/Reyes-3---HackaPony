@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { BotonSalir } from "@/modules/auth";
 import { IconoVaquita, Logo, NavLateral, PapelPicado } from "@/shared/components";
+import { MenuCuenta } from "./MenuCuenta";
 
 function Iniciales({ nombre }: { nombre: string }) {
   const letras = nombre
@@ -23,11 +24,11 @@ export function HeaderTienda({ nombre }: { nombre: string }) {
   return (
     <header className="sticky top-0 z-40 border-b bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur lg:hidden">
       <div className="mx-auto flex h-16 max-w-md items-center justify-between gap-2 px-4">
-        <Link href="/perfil" className="flex min-h-11 min-w-0 items-center gap-2.5" aria-label={`Perfil de ${nombre}`}>
+        <div className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5">
           <IconoVaquita className="size-9 shrink-0" />
           <span className="truncate font-display text-xl font-bold">{nombre}</span>
-        </Link>
-        <BotonSalir />
+        </div>
+        <MenuCuenta nombre={nombre} />
       </div>
     </header>
   );

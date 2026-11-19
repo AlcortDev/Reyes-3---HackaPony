@@ -141,7 +141,7 @@ flowchart LR
 | :--- | :--- | :---: |
 | **RF-AUT-01** | **Iniciar sesión** con correo y contraseña en `/login`. Al entrar, un ADMIN va a `/admin/tiendas`, un dueño con tienda APROBADA va a `/inventario` y cualquier otro va a `/perfil`. | MUST |
 | **RF-AUT-02** | **Verificación de correo**: al registrarse se envía un link (Mailpit). Sin verificar no se puede iniciar sesión; `/verificar-correo` permite reenviar el link. | MUST |
-| **RF-AUT-03** | **Cerrar sesión** desde el encabezado; revoca la sesión en el servidor. | MUST |
+| **RF-AUT-03** | **Cerrar sesión** desde el menú de cuenta del encabezado en celular y tablet, o desde el menú lateral en PC; revoca la sesión en el servidor. | MUST |
 | **RF-AUT-04** | **Bloqueo por intentos**: con 5 intentos fallidos la cuenta se bloquea 15 min (RN-14), además del límite por IP (RNF-SEC-04). | SHOULD |
 | **RF-AUT-05** | **Recuperar contraseña** en `/recuperar`: pide el correo y siempre responde con el mismo mensaje genérico (RNF-SEC-06). | SHOULD |
 | **RF-AUT-06** | **Restablecer contraseña** en `/restablecer?token=…`: link de un solo uso que expira en 15 min; al cambiarla se cierran todas las sesiones y se avisa por correo. | SHOULD |
@@ -166,7 +166,7 @@ flowchart LR
 | **RF-VER-06** | **Panel de admin** `/admin/tiendas`: solicitudes por estatus; detalle con fotos, documentos, mapa y datos; botones **Aprobar** y **Rechazar** (motivo obligatorio). Se registra quién revisó y cuándo y se avisa al dueño por correo. | MUST |
 | **RF-VER-07** | **Re-subir documentos** desde `/perfil` cuando la tienda fue RECHAZADA; vuelve a PENDIENTE. | SHOULD |
 | **RF-VER-08** | **Suspender / reactivar** una tienda aprobada (motivo obligatorio). | COULD |
-| **RF-TIE-01** | El encabezado muestra el nombre de la tienda actual (de la sesión) y el botón de cerrar sesión. | MUST |
+| **RF-TIE-01** | En celular y tablet, el encabezado muestra el nombre de la tienda actual (de la sesión) como texto y un botón de menú a la derecha. El menú abre un panel con **Mi cuenta** (enlace a `/perfil`) y **Salir**. En PC, el menú lateral conserva el acceso al perfil y el cierre de sesión. | MUST |
 | **RF-TIE-02** | Toda ruta protegida redirige a `/login` si no hay sesión (middleware) y a `/perfil` si la tienda no está APROBADA (layout + guard). | MUST |
 | **RF-TIE-03** | Página `/privacidad` con el aviso de privacidad: qué datos se piden, para qué y cuánto tiempo se guardan. | MUST |
 | **RF-TIE-04** | Una navegación inferior fija da acceso a **Inventario · Vaquitas · Ahorro**, resaltando la sección activa. | MUST |
