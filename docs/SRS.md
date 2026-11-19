@@ -263,9 +263,9 @@ flowchart LR
 | **RNF-SEC-01** | **Hash de contraseñas con Argon2id** (`@node-rs/argon2`, m=19 MiB, t=2, p=1) conectado a Better Auth. Nunca se guarda ni se registra la contraseña en texto plano. | A02 · ASVS V2.4 · *Password Storage CS* | A.8.24 · A.5.17 |
 | **RNF-SEC-02** | **Política de contraseñas**: mínimo 12 y máximo 128 caracteres, sin reglas de composición forzadas (NIST 800-63B). | ASVS V2.1 | A.5.17 |
 | **RNF-SEC-03** | **Sin SQL injection**: todo acceso a BD por Prisma (consultas parametrizadas); ESLint prohíbe `$queryRawUnsafe` y `$executeRawUnsafe`; Zod valida cada entrada en cliente **y** servidor. | A03 · ASVS V5 | A.8.28 |
-| **RNF-SEC-04** | **Límite por IP** (`rateLimit` de Better Auth con almacenamiento en BD): inicio de sesión 5 por minuto, recuperación 3 por hora. Para el registro y la re-subida de documentos, un helper propio sobre Postgres. | A07 | A.8.5 |
+| **RNF-SEC-04** | **Límite por IP** (`rateLimit` de Better Auth con almacenamiento en BD): inicio de sesión 5 por minuto, recuperación 3 por hora. Para el registro y la re-subida de documentos, un helper propio sobre Postgres. La IP se resuelve con la misma política en Better Auth (`advanced.ipAddress`) y en `datosDelRequest()`: por defecto **ningún header del cliente es de confianza** y todas las peticiones comparten un bucket; en producción se configura `CLIENT_IP_HEADER` (header que el proxy sobrescribe) o `TRUSTED_PROXIES` (IPs/CIDR de proxies que anteponen su dirección a `x-forwarded-for`, cadena que se recorre de derecha a izquierda). Nunca se toma el valor más a la izquierda de `x-forwarded-for`, que el cliente puede falsificar. Mientras no se configure el proxy, el bucket es global: 5 inicios de sesión por minuto **en total**, no por cliente; hay que configurarlo antes de exponer la app a usuarios reales. | A07 | A.8.5 |
 | **RNF-SEC-05** | **Bloqueo por cuenta**: 5 fallos → 15 min bloqueada (campos `failedLoginAttempts` y `lockedUntil`, no editables por el cliente). | A07 · ASVS V2.2.1 | A.8.5 |
-| **RNF-SEC-06** | **Sin enumeración de usuarios**: mensajes idénticos en login, registro y recuperación para correos existentes e inexistentes. | A07 · *Forgot Password CS* | A.8.5 |
+| **RNF-SEC-06** | **Sin enumeración de usuarios**: mensajes idénticos en login, registro y recuperación para correos existentes e inexistentes. Una cuenta bloqueada responde el mismo `status`, `code` y `message` que un login con credenciales inválidas; el bloqueo se aplica igual y `ACCOUNT_LOCKED` se escribe solo en la bitácora interna. | A07 · *Forgot Password CS* | A.8.5 |
 | **RNF-SEC-07** | **Sesiones seguras**: cookies `HttpOnly`, `SameSite=Lax`, `Secure` fuera de local; sesión de 7 días renovada a diario; logout y cambio de contraseña revocan sesiones; CSRF por validación de `Origin` (`trustedOrigins`). | A01 · ASVS V3 | A.5.15 · A.8.5 |
 | **RNF-SEC-08** | **Subida de archivos segura**: lista blanca (fachada: JPEG/PNG/WebP; comprobante e INE: además PDF) validada por los **bytes reales** (`file-type`); máximo 5 MB por archivo; nombres generados por el sistema; imágenes re-codificadas con `sharp` para quitar EXIF/GPS. | *File Upload CS* | A.8.28 · A.5.34 |
 | **RNF-SEC-09** | **Documentos cifrados**: se guardan en PostgreSQL cifrados con **AES-256-GCM** (llave en `DOCS_ENCRYPTION_KEY`), con SHA-256 de integridad; nunca en `/public`. | A02 | A.8.24 · A.5.34 · A.8.11 |
@@ -1153,7 +1153,7 @@ sequenceDiagram
     BA->>H: before
     H->>DB: ¿lockedUntil > ahora?
     alt cuenta bloqueada
-        H-->>UI: "Intenta en unos minutos" + ACCOUNT_LOCKED
+        H-->>UI: mismo error que credenciales inválidas (RNF-SEC-06)
     else no bloqueada
         BA->>DB: verificar hash Argon2id
         BA->>H: after
