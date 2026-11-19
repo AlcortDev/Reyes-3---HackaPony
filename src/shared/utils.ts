@@ -1,5 +1,5 @@
 const formatoMXN = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
-const formatoFecha = new Intl.DateTimeFormat("es-MX", { dateStyle: "medium", timeStyle: "short" });
+const formatoFecha = new Intl.DateTimeFormat("es-MX", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Mexico_City" });
 
 /** "$1,234.50" [RNF-13] */
 export function formatoMoneda(n: number): string {

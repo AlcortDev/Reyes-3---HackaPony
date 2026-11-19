@@ -4,3 +4,4 @@ export { nivelStock, diasParaAgotarse } from "./logic";
 export { getInventarioPorTienda, getDetalleInventario, getProductosBajoStock } from "./queries";
 export { registrarMovimiento } from "./actions";
 export { InventarioLista } from "./components/InventarioLista";
+export { InventarioDetalle } from "./components/InventarioDetalle";
