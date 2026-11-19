@@ -42,5 +42,7 @@ export interface ProductoCatalogoDTO {
   categoria: string;
   unidad: string;
   precioMenudeo: number;
+  /** Del catálogo (lo define el admin). null = todavía sin precio de mayoreo. */
+  precioMayoreo: number | null;
   tieneVaquitaAbierta: boolean;
 }

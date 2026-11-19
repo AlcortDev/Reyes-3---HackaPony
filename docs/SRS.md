@@ -158,10 +158,10 @@ flowchart LR
 
 | ID | Requisito | Prioridad |
 | :--- | :--- | :---: |
-| **RF-VER-01** | **Registro de tienda en 4 pasos** en `/registro`, con un solo envío: (1) cuenta: nombre, correo, contraseña; (2) tienda: nombre del negocio, dirección, teléfono; (3) ubicación; (4) documentos + aceptar el aviso de privacidad. | MUST |
+| **RF-VER-01** | **Registro y verificación separados.** (a) `/registro`: solo la **cuenta** (nombre, correo, contraseña) → correo de verificación. (b) Ya con sesión, `/verificar-tienda` en 3 pasos con un solo envío: tienda (nombre, dirección, teléfono) → ubicación → documentos + aviso de privacidad. Al entrar sin tienda, `/` y `/perfil` llevan a `/verificar-tienda`. | MUST |
 | **RF-VER-02** | **Ubicación**: pin en un mapa (Leaflet + OpenStreetMap) con botón "Usar mi ubicación" y ajuste manual. Guarda `lat`/`lng`. | MUST |
 | **RF-VER-03** | **Documentos obligatorios**: foto de la **fachada** (en celular abre la cámara), **comprobante de domicilio** e **identificación oficial (INE)** del dueño, con las validaciones de RNF-SEC-08. | MUST |
-| **RF-VER-04** | Se valida **todo antes de crear la cuenta**; si algo falla después, se revierte (no quedan usuarios sin tienda ni documentos). La tienda queda **PENDIENTE**. | MUST |
+| **RF-VER-04** | En `/verificar-tienda` se valida **todo antes de guardar** (Zod + RNF-SEC-08); la tienda y sus 3 documentos se crean en **una transacción** (nada a medias) y la tienda queda **PENDIENTE**. Una tienda por usuario (RN-13). Límite de registros: por IP si se conoce; si no, por correo + tope global (no un contador compartido por todos). | MUST |
 | **RF-VER-05** | **Acceso restringido**: con la tienda en estado distinto de APROBADA, el usuario **solo puede ver `/perfil`** (datos, estatus y motivo de rechazo). Cualquier otra página o acción se bloquea en el servidor (RN-15). | MUST |
 | **RF-VER-06** | **Panel de admin** `/admin/tiendas`: solicitudes por estatus; detalle con fotos, documentos, mapa y datos; botones **Aprobar** y **Rechazar** (motivo obligatorio). Se registra quién revisó y cuándo y se avisa al dueño por correo. | MUST |
 | **RF-VER-07** | **Re-subir documentos** desde `/perfil` cuando la tienda fue RECHAZADA; vuelve a PENDIENTE. | SHOULD |
@@ -171,8 +171,9 @@ flowchart LR
 | **RF-TIE-03** | Página `/privacidad` con el aviso de privacidad: qué datos se piden, para qué y cuánto tiempo se guardan. | MUST |
 | **RF-TIE-04** | Una navegación inferior fija da acceso a **Inventario · Vaquitas · Ahorro**, resaltando la sección activa. | MUST |
 
-- **CA RF-VER-01/04:** *Dado* que completo los 4 pasos con archivos válidos, *cuando* envío, *entonces* se crea la cuenta y la tienda PENDIENTE y llega el correo de verificación a Mailpit.
-- **CA RF-VER-03 (borde):** *Dado* un `.exe` renombrado a `.jpg`, un archivo de 6 MB o un PDF en el campo de fachada, *cuando* envío, *entonces* se rechaza con un mensaje claro y **no se crea la cuenta**.
+- **CA RF-VER-01:** *Dado* que me registro en `/registro`, *cuando* envío, *entonces* llega el correo de verificación a Mailpit; al verificar e iniciar sesión, la app me lleva a `/verificar-tienda`.
+- **CA RF-VER-04:** *Dado* que con sesión completo los 3 pasos con archivos válidos, *cuando* envío, *entonces* se crea la tienda PENDIENTE con sus documentos y veo "Tu tienda está en revisión" en `/perfil`.
+- **CA RF-VER-03 (borde):** *Dado* un `.exe` renombrado a `.jpg`, un archivo de 6 MB o un PDF en el campo de fachada, *cuando* envío, *entonces* se rechaza con un mensaje claro y **no se crea la tienda**.
 - **CA RF-VER-05:** *Dado* que mi tienda está PENDIENTE, *cuando* abro `/inventario` o llamo directamente a `registrarMovimiento`, *entonces* soy enviado a `/perfil` o recibo "No autorizado".
 - **CA RF-VER-06:** *Dado* una tienda PENDIENTE, *cuando* el admin la aprueba, *entonces* el dueño recibe el correo y en su siguiente carga ya ve `/inventario`. Si la rechaza sin motivo, no se permite.
 - **CA RF-TIE-02:** *Dado* que no tengo sesión, *cuando* abro `/vaquitas`, *entonces* soy redirigido a `/login`.
@@ -191,10 +192,12 @@ flowchart LR
 | **RF-INV-08** | **Alerta → Vaquita:** si el producto está bajo y existe una vaquita ABIERTA de ese producto, mostrar *"Faltan X unidades · te ahorras $Y por pieza · [Unirme]"* que lleva a `/vaquitas/[id]`. | SHOULD |
 | **RF-INV-09** | Si el producto está bajo y **no** hay vaquita abierta, ofrecer **"Armar una vaquita"**. | COULD |
 | **RF-INV-10** | Registrar movimiento escaneando **código de barras** con la cámara. | COULD |
+| **RF-INV-11** | **Agregar producto** al inventario (botón debajo de "Buscar por código", también con el inventario vacío): **del catálogo** (productos que la tienda aún no tiene) o **nuevo** (nombre, categoría, unidad, precio al público, código opcional y único). Pide existencias iniciales (se registran como ENTRADA) y el mínimo para la alerta. Si un código escaneado no está en el inventario, se ofrece agregarlo con el código ya puesto. Un producto nuevo entra al catálogo sin precio de mayoreo. | MUST |
 
 - **CA RF-INV-02:** *Dado* un producto con stock 5, *cuando* toco **−**, *entonces* el stock muestra 4 sin recargar la página y se crea un `Movimiento` SALIDA de 1.
 - **CA RF-INV-02 (borde):** *Dado* stock 0, *cuando* intento una SALIDA, *entonces* se rechaza con el mensaje "No hay unidades para sacar" (RN-03).
 - **CA RF-INV-04:** *Dado* stockMinimo 6 y stock 7, *cuando* registro 2 salidas, *entonces* el semáforo pasa a 🔴 y el contador de alertas aumenta en 1.
+- **CA RF-INV-11:** *Dado* una tienda con inventario vacío, *cuando* toco "Agregar producto" y elijo Coca-Cola del catálogo con 12 piezas y mínimo 5, *entonces* aparece en la lista con stock 12 y su historial tiene una ENTRADA de 12. Si ya la tenía, se rechaza con "ya está en tu inventario".
 - **CA RF-INV-08:** *Dado* Coca-Cola en 🔴 y una vaquita ABIERTA de Coca-Cola, *cuando* abro el producto, *entonces* veo el aviso con unidades faltantes y ahorro por pieza, y el botón me lleva a esa vaquita.
 
 #### 🐄 Módulo `vaquitas` — dueño: Jesús
@@ -206,7 +209,8 @@ flowchart LR
 | **RF-VAQ-03** | Mostrar en el detalle la **lista de aportaciones por tienda** (quién puso cuánto). | MUST |
 | **RF-VAQ-04** | Cuando lo aportado alcanza la meta, la vaquita pasa a **COMPLETA** automáticamente (RN-06) y ya no acepta aportaciones. | MUST |
 | **RF-VAQ-05** | **Tiempo casi real:** el detalle de la vaquita se actualiza solo (polling cada ≤ 2 s) para que otra pantalla vea subir la barra sin recargar. | MUST |
-| **RF-VAQ-06** | **Crear** una vaquita: producto, proveedor, meta de unidades, precio de mayoreo, fecha de cierre. | SHOULD |
+| **RF-VAQ-06** | **Crear** una vaquita: producto, proveedor, meta de unidades y fecha de cierre. El **precio de mayoreo NO lo captura el tendero**: se toma de `Producto.precioMayoreo` (catálogo del admin) y se muestra solo para leer, con el ahorro por unidad. Un producto sin precio de mayoreo no permite armar vaquita. | SHOULD |
+| **RF-ADM-01** | **Precios de mayoreo** en `/admin/productos`: el admin fija `precioMayoreo` de cada producto del catálogo (menor al de menudeo, RN-11). Queda en la bitácora (`PRECIO_MAYOREO_ACTUALIZADO`). | SHOULD |
 | **RF-VAQ-07** | Celebración al completar: **confeti** + "¡Precio de mayoreo desbloqueado!". | SHOULD |
 | **RF-VAQ-08** | **Cuenta regresiva** al cierre; al vencer sin completar, la vaquita pasa a CERRADA (RN-08). | SHOULD |
 | **RF-VAQ-09** | Botón **"Invitar por WhatsApp"** que abre `https://wa.me/?text=<mensaje + link>`. | SHOULD |
@@ -289,7 +293,7 @@ flowchart LR
 | **RN-08** | Una vaquita ABIERTA con `cierraEn` vencido y meta no alcanzada se considera **CERRADA** (se evalúa al consultarla; no se requiere cron). |
 | **RN-09** | **Ahorro** de una aportación = `(precioMenudeo − precioMayoreo) × cantidad`. Solo cuenta como "ahorrado" si la vaquita está **COMPLETA**; si está ABIERTA es "ahorro potencial". |
 | **RN-10** | Una tienda puede aportar **varias veces** a la misma vaquita; en la lista se muestran sumadas por tienda. |
-| **RN-11** | `precioMayoreo` debe ser **menor** que `precioMenudeo` del producto al crear una vaquita. |
+| **RN-11** | `precioMayoreo` lo define **solo el ADMIN** en el catálogo (`Producto.precioMayoreo`) y debe ser **menor** que `precioMenudeo`. La vaquita copia ese precio al crearse; cualquier precio que mande el cliente se ignora. |
 | **RN-12** | Solo puede haber **una vaquita ABIERTA por producto** a la vez en la colonia (simplifica RF-INV-08). |
 | **RN-13** | Cada usuario TENDERO tiene **exactamente una** tienda (`Tienda.usuarioId` único). El rol ADMIN solo se asigna desde el seed o la BD. |
 | **RN-14** | **Bloqueo**: cada intento fallido suma 1 a `failedLoginAttempts`; al llegar a 5 se fija `lockedUntil = ahora + 15 min` y el contador vuelve a 0. Un login exitoso reinicia el contador. Mientras `lockedUntil > ahora` se rechaza cualquier intento. |
@@ -754,7 +758,7 @@ model Canasta {
   productoId    String
   proveedor     String
   metaUnidades  Int
-  precioMayoreo Float
+  precioMayoreo Float         // copia de Producto.precioMayoreo al crear (RN-11)
   cierraEn      DateTime
   estado        EstadoCanasta @default(ABIERTA)
   creadaEn      DateTime      @default(now())
@@ -828,13 +832,15 @@ enum TipoDocumento {
 | Ruta | Requisitos | Módulo |
 | :--- | :--- | :--- |
 | `/login` | RF-AUT-01 | auth |
-| `/registro` | RF-VER-01…04 | tiendas |
+| `/registro` | RF-VER-01, RF-AUT-02 | tiendas |
+| `/verificar-tienda` | RF-VER-01…04 | tiendas |
 | `/verificar-correo` | RF-AUT-02 | auth |
 | `/recuperar`, `/restablecer` | RF-AUT-05, RF-AUT-06 | auth |
 | `/privacidad` | RF-TIE-03 | tiendas |
 | `/perfil` | RF-VER-05, RF-VER-07 | tiendas |
 | `/admin/tiendas`, `/admin/tiendas/[id]` | RF-VER-06, RF-VER-08 | admin |
-| `/inventario` | RF-INV-01…05 | inventario |
+| `/admin/productos` | RF-ADM-01 | admin |
+| `/inventario` | RF-INV-01…05, RF-INV-10, RF-INV-11 | inventario |
 | `/inventario/[id]` *(id = Inventario.id)* | RF-INV-06…09 | inventario |
 | `/vaquitas` | RF-VAQ-01, RF-VAQ-06 | vaquitas |
 | `/vaquitas/[id]` | RF-VAQ-02…05, 07…12 | vaquitas |
@@ -907,12 +913,13 @@ export { LoginForm, RecuperarForm, RestablecerForm, VerificarCorreo } from "./co
 
 #### `@/modules/tiendas`
 ```ts
-export { registroSchema } from "./schemas";                              // cuenta + tienda + ubicación + documentos
-export function registrarTienda(formData: FormData): Promise<Resultado>;  // RF-VER-01…04 (mensaje genérico, RNF-SEC-06)
+export { cuentaSchema, verificacionSchema } from "./schemas";             // paso 1: cuenta · paso 2: tienda + ubicación + aviso
+export function registrarCuenta(formData: FormData): Promise<Resultado<{ mensaje: string }>>; // RF-VER-01 (mensaje genérico, RNF-SEC-06)
+export function solicitarVerificacion(formData: FormData): Promise<Resultado>; // RF-VER-01…04 (con sesión; tienda + 3 documentos)
 export function resubirDocumentos(formData: FormData): Promise<Resultado>; // RF-VER-07 (solo si RECHAZADA)
 export function getMiTienda(): Promise<MiTiendaDTO | null>;              // tienda del usuario en sesión, con estatus y motivo
 export function getTiendaActual(): Promise<TiendaDTO | null>;            // tienda APROBADA de la sesión
-export { RegistroWizard, PerfilTienda, BannerEstatus, HeaderTienda } from "./components";
+export { RegistroCuenta, VerificacionTienda, PerfilTienda, BannerEstatus, HeaderTienda } from "./components";
 ```
 
 #### `@/modules/admin`
@@ -922,7 +929,9 @@ export function getTiendaParaRevision(tiendaId: string): Promise<RevisionDTO | n
 export function aprobarTienda(tiendaId: string): Promise<Resultado>;                            // RN-16
 export function rechazarTienda(tiendaId: string, motivo: string): Promise<Resultado>;           // motivo obligatorio
 export function suspenderTienda(tiendaId: string, motivo: string): Promise<Resultado>;          // COULD
-export { TablaSolicitudes, RevisionTienda } from "./components";
+export function listarCatalogo(): Promise<ProductoCatalogoAdminDTO[]>;                         // RF-ADM-01
+export function actualizarPrecioMayoreo(input: { productoId: string; precioMayoreo: number }): Promise<Resultado>; // RF-ADM-01 · RN-11
+export { TablaSolicitudes, RevisionTienda, CatalogoPrecios, NavAdmin } from "./components";
 ```
 
 #### `@/modules/inventario`
@@ -937,13 +946,15 @@ export function registrarMovimiento(input: {
   tipo: "ENTRADA" | "SALIDA";
   cantidad: number;
 }): Promise<Resultado<{ stock: number }>>;                     // valida RN-02, RN-03 y que el inventario sea de la tienda en sesión
+export function getProductosParaAgregar(tiendaId: string): Promise<ProductoParaAgregarDTO[]>; // RF-INV-11: catálogo que la tienda aún no tiene
+export function agregarProductoAlInventario(input: AltaInventarioInput): Promise<Resultado<{ inventarioId: string; nombre: string }>>; // RF-INV-11
 
 // logic.ts (puras)
 export function nivelStock(stock: number, stockMinimo: number): NivelStock;          // RN-01
 export function diasParaAgotarse(stock: number, salidasUltimos7Dias: number): number | null; // RN-07
 
 // Componentes públicos: las páginas solo consultan y renderizan.
-export function InventarioLista(props: { items: ItemInventarioDTO[] }): React.JSX.Element;
+export function InventarioLista(props: { items: ItemInventarioDTO[]; catalogo: ProductoParaAgregarDTO[] }): React.JSX.Element;
 export function InventarioDetalle(props: { detalle: DetalleInventarioDTO }): Promise<React.JSX.Element>;
 ```
 
@@ -961,9 +972,8 @@ export function crearVaquita(input: {
   productoId: string;
   proveedor: string;
   metaUnidades: number;
-  precioMayoreo: number;
   cierraEn: Date;
-}): Promise<Resultado<{ id: string }>>;                                    // RN-11, RN-12
+}): Promise<Resultado<{ id: string }>>;                                    // RN-11 (precio del catálogo), RN-12
 
 // logic.ts (puras)
 export function estadoEfectivo(estado: EstadoCanasta, cierraEn: Date, total: number, meta: number): EstadoCanasta; // RN-06, RN-08
@@ -1040,14 +1050,14 @@ flowchart LR
 
 ### 7.2 Especificación de casos de uso principales
 
-**CU-09 · Registrar tienda con documentos** (RF-VER-01…04, RF-AUT-02)
+**CU-09 · Crear cuenta y verificar tienda** (RF-VER-01…04, RF-AUT-02)
 | | |
 | :--- | :--- |
 | Actor | Tendero(a) sin cuenta |
 | Precondición | Ninguna |
-| Flujo principal | 1. Abre `/registro`. 2. Llena cuenta, datos de la tienda, ubicación en el mapa y sube fachada, comprobante e INE; acepta el aviso de privacidad. 3. El servidor valida todo (Zod + RNF-SEC-08) y aplica el límite por IP. 4. Crea el usuario con Better Auth, la tienda PENDIENTE y los documentos cifrados. 5. Envía el correo de verificación y muestra "Revisa tu correo". |
-| Flujo alterno | 3a. Archivo inválido o muy grande → se marca el campo y **no se crea nada**. 4a. Falla al guardar documentos → se borra el usuario creado y se muestra error genérico. 3b. Correo ya registrado → mismo mensaje genérico (RNF-SEC-06). |
-| Postcondición | `User` sin verificar, `Tienda` PENDIENTE con 3 `DocumentoTienda`, evento `TIENDA_REGISTRADA`. |
+| Flujo principal | 1. Abre `/registro` y crea su cuenta (nombre, correo, contraseña). 2. Verifica el correo desde Mailpit e inicia sesión. 3. La app lo lleva a `/verificar-tienda`: datos de la tienda, ubicación en el mapa, fachada, comprobante e INE; acepta el aviso de privacidad. 4. El servidor valida todo (Zod + RNF-SEC-08) y crea en una transacción la tienda PENDIENTE y los documentos cifrados. 5. Muestra "Tu tienda está en revisión" en `/perfil`. |
+| Flujo alterno | 1a. Correo ya registrado → mismo mensaje genérico (RNF-SEC-06). 4a. Archivo inválido o muy grande → se marca el campo y **no se crea la tienda**. 4b. Doble envío → "Tu tienda ya fue enviada a revisión". |
+| Postcondición | `User` verificado, `Tienda` PENDIENTE con 3 `DocumentoTienda`, eventos `SIGNUP` y `TIENDA_REGISTRADA`. |
 
 **CU-10 · Revisar y aprobar tienda** (RF-VER-06)
 | | |
@@ -1181,6 +1191,7 @@ flowchart TB
     VC --> L
     L --> REC["/recuperar"] --> RES["/restablecer"] --> L
     D -->|"ADMIN"| ADM["/admin/tiendas"]
+    D -->|"sin tienda"| VT["/verificar-tienda"] --> P
     D -->|"tienda no aprobada"| P["/perfil"]
     D -->|"tienda APROBADA"| I["/inventario"]
     I --> ID["/inventario/[id]"]

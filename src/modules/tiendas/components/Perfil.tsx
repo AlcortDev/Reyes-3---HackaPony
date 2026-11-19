@@ -83,7 +83,15 @@ export function PerfilTienda({ tienda }: { tienda: MiTiendaDTO | null }) {
 
       {!tienda ? (
         <Card>
-          <CardContent className="pt-6">No encontramos una tienda ligada a tu cuenta.</CardContent>
+          <CardHeader>
+            <CardTitle className="text-xl">Falta verificar tu tienda</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p>Para usar el inventario y las vaquitas, mándanos los datos de tu tienda, su ubicación y tus documentos. Un administrador la revisa.</p>
+            <Button asChild size="lg" className="w-full sm:w-auto">
+              <Link href="/verificar-tienda">Verificar mi tienda</Link>
+            </Button>
+          </CardContent>
         </Card>
       ) : (
         <>
