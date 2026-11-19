@@ -2,6 +2,7 @@
 
 > **Proyecto:** *La Vaquita* — inventario rápido + compras en grupo para tienditas de colonia.
 > **Tiempo:** 8 horas. **Meta:** demo en vivo estable, bonita y ensayada. Nada de "eso solo está en la diapositiva".
+> 📘 **Requisitos, diagramas y contratos:** [`docs/SRS.md`](docs/SRS.md) — la fuente de verdad para personas y agentes.
 
 ---
 
