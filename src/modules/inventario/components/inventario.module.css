@@ -146,8 +146,8 @@
 .filaControles { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .filaBoton { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--inv-borde); border-radius: 12px; background: white; color: var(--inv-secundario); }
 .filaBoton:disabled { cursor: not-allowed; }
-.filaStock { display: flex; flex-direction: column; align-items: center; min-width: 48px; font-size: 22px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.filaStock small { font-size: 13px; font-weight: 400; color: var(--inv-muted); }
+.filaCantidad { display: flex; flex-direction: column; align-items: center; min-width: 48px; font-size: 22px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.filaCantidad small { font-size: 13px; font-weight: 400; color: var(--inv-muted); }
 .filaDetalle { display: grid; place-items: center; width: 32px; height: 44px; color: var(--inv-muted); }
 .girando { animation: girar 1s linear infinite; }
 @keyframes girar { to { transform: rotate(360deg); } }

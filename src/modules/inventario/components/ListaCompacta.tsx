@@ -45,7 +45,7 @@ export function ListaCompacta({ items, bloqueado, pendiente, guardar }: Props) {
               >
                 <Minus aria-hidden="true" size={20} />
               </button>
-              <span className={estilos.filaStock} aria-label={`Me quedan ${item.stock} ${item.unidad}`}>
+              <span className={estilos.filaCantidad} aria-label={`Me quedan ${item.stock} ${item.unidad}`}>
                 {guardando ? <LoaderCircle aria-hidden="true" size={18} className={estilos.girando} /> : item.stock}
                 <small>{item.unidad}</small>
               </span>
