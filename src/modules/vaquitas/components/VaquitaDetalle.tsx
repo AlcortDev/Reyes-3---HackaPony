@@ -30,6 +30,7 @@ function ConfetiCelebracion({ activo }: { activo: boolean }) {
   const piezas = Array.from({ length: 28 }, (_, i) => ({
     id: i,
     left: `${(i * 37) % 100}%`,
+    top: `${(i * 19) % 85}%`,
     delay: `${(i % 7) * 0.15}s`,
     duration: `${1.8 + (i % 5) * 0.35}s`,
     emoji: ["🎉", "🐄", "💸", "✨", "🥳", "🟢"][i % 6],
@@ -43,12 +44,12 @@ function ConfetiCelebracion({ activo }: { activo: boolean }) {
       {piezas.map((p) => (
         <span
           key={p.id}
-          className=" absolute -top-8 animate-bounce text-2xl"
+          className="absolute animate-bounce text-2xl"
           style={{
             left: p.left,
+            top: p.top,
             animationDelay: p.delay,
             animationDuration: p.duration,
-            top: `${(p.id * 19) % 85}%`,
           }}
         >
           {p.emoji}
@@ -62,10 +63,12 @@ export function VaquitaDetalle({
   inicial,
   tiendaActualId,
   tiendaActualNombre,
+  yaRecibidoInicial = false,
 }: {
   inicial: VaquitaDetalleDTO;
   tiendaActualId?: string;
   tiendaActualNombre?: string;
+  yaRecibidoInicial?: boolean;
 }) {
   // [RF-VAQ-05] Polling cada 2 segundos para ver subir la barra en tiempo real desde otro dispositivo
   const { data, mutate, isValidating } = useSWR<VaquitaDetalleDTO>(
@@ -113,11 +116,24 @@ export function VaquitaDetalle({
     return () => clearTimeout(timer);
   }, [mostrarConfeti]);
 
-  // Cantidad por aportar: por defecto min(10, faltan) [CU-04]
+  // Cantidad por aportar: por defecto min(10, faltan) [CU-04]. Se maneja como string para permitir borrar en móvil.
   const sugerida = Math.max(1, Math.min(10, vaquita.faltan || 1));
-  const [cantidad, setCantidad] = useState<number>(sugerida);
+  const [cantidadTexto, setCantidadTexto] = useState<string>(String(sugerida));
+  const cantidad = useMemo(() => {
+    const parsed = Number.parseInt(cantidadTexto, 10);
+    if (!Number.isFinite(parsed) || parsed < 1) return 1;
+    if (vaquita.faltan > 0 && parsed > vaquita.faltan) return vaquita.faltan;
+    return parsed;
+  }, [cantidadTexto, vaquita.faltan]);
+
+  const fijarCantidad = (n: number) => {
+    const clamped = Math.max(1, vaquita.faltan > 0 ? Math.min(vaquita.faltan, n) : n);
+    setCantidadTexto(String(clamped));
+  };
+
   const [mensajeError, setMensajeError] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
+  const [yaRecibido, setYaRecibido] = useState(yaRecibidoInicial);
   const [pedidoRecibido, setPedidoRecibido] = useState<{ unidades: number; stock: number } | null>(null);
   const [mostrarQr, setMostrarQr] = useState(true);
   const [copiado, setCopiado] = useState(false);
@@ -125,10 +141,11 @@ export function VaquitaDetalle({
 
   // Ajustar cantidad si por polling baja el número de faltantes
   useEffect(() => {
-    if (vaquita.faltan > 0 && cantidad > vaquita.faltan) {
-      setCantidad(vaquita.faltan);
+    const parsed = Number.parseInt(cantidadTexto, 10);
+    if (vaquita.faltan > 0 && Number.isFinite(parsed) && parsed > vaquita.faltan) {
+      setCantidadTexto(String(vaquita.faltan));
     }
-  }, [vaquita.faltan, cantidad]);
+  }, [vaquita.faltan, cantidadTexto]);
 
   const [urlActual, setUrlActual] = useState(`http://localhost:3000/vaquitas/${vaquita.id}`);
   useEffect(() => {
@@ -192,6 +209,7 @@ export function VaquitaDetalle({
         setMensajeError(res.error);
         return;
       }
+      setYaRecibido(true);
       setPedidoRecibido({ unidades: res.data.unidadesRecibidas, stock: res.data.nuevoStock });
     });
   };
@@ -268,6 +286,10 @@ export function VaquitaDetalle({
                   ✅ ¡Sumaste +{pedidoRecibido.unidades} {vaquita.unidad ?? "unidades"} a tu inventario! (Stock actual:{" "}
                   {pedidoRecibido.stock})
                 </p>
+              ) : yaRecibido ? (
+                <p className="rounded-xl bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-900">
+                  📦 Ya ingresaste estas {miAportacionActual} {vaquita.unidad ?? "unidades"} a tu inventario.
+                </p>
               ) : (
                 <button
                   type="button"
@@ -304,6 +326,7 @@ export function VaquitaDetalle({
           </div>
           {estadoReal === "ABIERTA" && (
             <span
+              suppressHydrationWarning
               className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
                 restante.urgente ? "bg-amber-100 text-amber-900" : "bg-green-100 text-green-800"
               }`}
@@ -357,7 +380,7 @@ export function VaquitaDetalle({
 
         {/* Información de cierre y Punto de entrega [RF-VAQ-08, RF-VAQ-12] */}
         <div className="grid grid-cols-1 gap-2 rounded-xl bg-gray-50 p-3 text-xs text-gray-700 sm:grid-cols-2">
-          <div>
+          <div suppressHydrationWarning>
             <span className="font-semibold text-gray-900">📅 Fecha límite:</span>{" "}
             {formatoFechaHora(vaquita.cierraEn)}
           </div>
@@ -403,7 +426,7 @@ export function VaquitaDetalle({
                 <button
                   key={n}
                   type="button"
-                  onClick={() => setCantidad(n)}
+                  onClick={() => fijarCantidad(n)}
                   className={`min-h-11 rounded-xl border px-3.5 py-2 text-sm font-bold transition ${
                     cantidad === n
                       ? "border-green-700 bg-green-700 text-white"
@@ -415,7 +438,7 @@ export function VaquitaDetalle({
               ))}
             <button
               type="button"
-              onClick={() => setCantidad(vaquita.faltan)}
+              onClick={() => fijarCantidad(vaquita.faltan)}
               className={`min-h-11 flex-1 rounded-xl border px-3.5 py-2 text-sm font-bold transition ${
                 cantidad === vaquita.faltan
                   ? "border-amber-600 bg-amber-500 text-gray-950"
@@ -432,7 +455,7 @@ export function VaquitaDetalle({
               type="button"
               aria-label="Restar 1 unidad"
               disabled={cantidad <= 1 || isPending}
-              onClick={() => setCantidad((c) => Math.max(1, c - 1))}
+              onClick={() => fijarCantidad(cantidad - 1)}
               className="flex min-h-12 min-w-12 items-center justify-center rounded-xl border border-gray-300 bg-gray-100 text-2xl font-bold text-gray-900 disabled:opacity-40"
             >
               −
@@ -444,15 +467,12 @@ export function VaquitaDetalle({
               <input
                 id="input-cantidad-vaquita"
                 type="number"
+                inputMode="numeric"
                 min={1}
                 max={vaquita.faltan}
-                value={cantidad}
-                onChange={(e) => {
-                  const val = Number.parseInt(e.target.value, 10);
-                  if (Number.isFinite(val)) {
-                    setCantidad(Math.max(1, Math.min(vaquita.faltan, val)));
-                  }
-                }}
+                value={cantidadTexto}
+                onChange={(e) => setCantidadTexto(e.target.value)}
+                onBlur={() => fijarCantidad(cantidad)}
                 className="min-h-12 w-full rounded-xl border border-gray-300 bg-white text-center text-2xl font-extrabold text-gray-900"
               />
             </div>
@@ -460,7 +480,7 @@ export function VaquitaDetalle({
               type="button"
               aria-label="Sumar 1 unidad"
               disabled={cantidad >= vaquita.faltan || isPending}
-              onClick={() => setCantidad((c) => Math.min(vaquita.faltan, c + 1))}
+              onClick={() => fijarCantidad(cantidad + 1)}
               className="flex min-h-12 min-w-12 items-center justify-center rounded-xl border border-gray-300 bg-gray-100 text-2xl font-bold text-gray-900 disabled:opacity-40"
             >
               +

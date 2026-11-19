@@ -192,13 +192,15 @@ const recibirSchema = z.object({
   canastaId: z.string().min(1),
 });
 
-/** [RF-VAQ-11 · COULD] En una vaquita COMPLETA, la tienda marca "Recibido" y suma ENTRADA a su inventario. */
+/** [RF-VAQ-11 · COULD] En una vaquita COMPLETA, la tienda marca "Recibido" y suma ENTRADA a su inventario (idempotente). */
 export async function recibirPedidoVaquita(input: {
   canastaId: string;
 }): Promise<Resultado<{ unidadesRecibidas: number; nuevoStock: number }>> {
   let tiendaId: string;
+  let usuarioId: string;
   try {
     ({
+      usuario: { id: usuarioId },
       tienda: { id: tiendaId },
     } = await assertTiendaAprobada());
   } catch (e) {
@@ -210,9 +212,22 @@ export async function recibirPedidoVaquita(input: {
   if (!datos.success) return fallo("Vaquita inválida");
 
   const { canastaId } = datos.data;
+  const claveObjetivo = `${canastaId}:${tiendaId}`;
 
   const resultado = await db.$transaction(
     async (tx): Promise<Resultado<{ unidadesRecibidas: number; nuevoStock: number }>> => {
+      const yaRecibido = await tx.auditLog.findFirst({
+        where: {
+          evento: "VAQUITA_PEDIDO_RECIBIDO",
+          objetivo: claveObjetivo,
+          exito: true,
+        },
+        select: { id: true },
+      });
+      if (yaRecibido) {
+        return fallo("Tu tienda ya recibió las unidades de esta vaquita en su inventario");
+      }
+
       const canasta = await tx.canasta.findUnique({
         where: { id: canastaId },
         include: { aportaciones: true },
@@ -261,6 +276,21 @@ export async function recibirPedidoVaquita(input: {
           inventarioId: inventario.id,
           tipo: "ENTRADA",
           cantidad: unidadesTienda,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          evento: "VAQUITA_PEDIDO_RECIBIDO",
+          userId: usuarioId,
+          objetivo: claveObjetivo,
+          exito: true,
+          detalle: {
+            canastaId,
+            tiendaId,
+            unidadesRecibidas: unidadesTienda,
+            nuevoStock: inventario.stock,
+          },
         },
       });
 

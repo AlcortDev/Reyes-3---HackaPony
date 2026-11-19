@@ -1,5 +1,6 @@
 "use client";
-// [RF-VAQ-01, RF-VAQ-06, RF-VAQ-08] Lista de vaquitas con barra de progreso, filtros y creación. Dueño: Jesús.
+// [RF-VAQ-01, RF-VAQ-06, RF-VAQ-08] Lista de vaquitas con barra de progreso, sugerencias de bajo stock, filtros y creación.
+// Dueño: Jesús.
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -7,6 +8,14 @@ import { formatoMoneda } from "@/shared/utils";
 import { crearVaquita } from "../actions";
 import { tiempoRestante } from "../logic";
 import type { ProductoCatalogoDTO, VaquitaDTO } from "../types";
+
+export interface SugerenciaBajoStock {
+  productoId: string;
+  nombre: string;
+  stock: number;
+  stockMinimo: number;
+  unidad: string;
+}
 
 export function BarraVaquita({ v }: { v: VaquitaDTO }) {
   const esCompleta = v.estado === "COMPLETA";
@@ -75,6 +84,7 @@ function BadgeEstadoVaquita({ v }: { v: VaquitaDTO }) {
   const restante = tiempoRestante(v.cierraEn);
   return (
     <span
+      suppressHydrationWarning
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
         restante.urgente ? "bg-amber-100 text-amber-900" : "bg-green-100 text-green-800"
       }`}
@@ -88,10 +98,12 @@ export function VaquitasLista({
   vaquitas,
   productos = [],
   productoInicialId,
+  productosBajoStock = [],
 }: {
   vaquitas: VaquitaDTO[];
   productos?: ProductoCatalogoDTO[];
   productoInicialId?: string;
+  productosBajoStock?: SugerenciaBajoStock[];
 }) {
   const router = useRouter();
   const [filtro, setFiltro] = useState<"TODAS" | "ABIERTA" | "COMPLETA">("TODAS");
@@ -118,6 +130,11 @@ export function VaquitasLista({
     if (prod) {
       setPrecioMayoreo(String(Math.max(1, Math.round(prod.precioMenudeo * 0.8 * 10) / 10)));
     }
+  };
+
+  const abrirCrearConProducto = (idProd: string) => {
+    cambiarProducto(idProd);
+    setMostrarCrear(true);
   };
 
   const handleCrear = (e: React.FormEvent) => {
@@ -185,6 +202,59 @@ export function VaquitasLista({
           </button>
         )}
       </div>
+
+      {/* Sugerencias conectadas con el módulo inventario (getProductosBajoStock) */}
+      {productosBajoStock.length > 0 && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-3.5 space-y-2">
+          <p className="text-xs font-extrabold uppercase tracking-wide text-amber-900">
+            ⚠️ Productos por agotarse en tu tienda
+          </p>
+          <ul className="space-y-2">
+            {productosBajoStock.slice(0, 3).map((item) => {
+              const vaquitaAbierta = vaquitas.find(
+                (v) =>
+                  v.estado === "ABIERTA" &&
+                  (v.productoId === item.productoId || v.producto.toLowerCase() === item.nombre.toLowerCase()),
+              );
+              const productoCatalogo = productos.find(
+                (p) => p.id === item.productoId || p.nombre.toLowerCase() === item.nombre.toLowerCase(),
+              );
+
+              return (
+                <li
+                  key={item.productoId}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white p-2.5 shadow-2xs"
+                >
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">
+                      🔴 {item.nombre}{" "}
+                      <span className="font-normal text-gray-600">
+                        (te quedan {item.stock} {item.unidad})
+                      </span>
+                    </p>
+                  </div>
+                  {vaquitaAbierta ? (
+                    <Link
+                      href={`/vaquitas/${vaquitaAbierta.id}`}
+                      className="inline-flex min-h-10 items-center rounded-lg bg-green-700 px-3 py-1.5 text-xs font-bold text-white"
+                    >
+                      🐄 Unirme ({vaquitaAbierta.porcentaje}%) →
+                    </Link>
+                  ) : productoCatalogo ? (
+                    <button
+                      type="button"
+                      onClick={() => abrirCrearConProducto(productoCatalogo.id)}
+                      className="inline-flex min-h-10 items-center rounded-lg border border-amber-600 bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-950"
+                    >
+                      + Armar vaquita
+                    </button>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {/* Formulario para armar nueva vaquita [RF-VAQ-06] */}
       {mostrarCrear && productos.length > 0 && (

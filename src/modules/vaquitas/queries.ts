@@ -160,3 +160,16 @@ export async function listarProductosParaVaquita(): Promise<ProductoCatalogoDTO[
     tieneVaquitaAbierta: idsAbiertos.has(p.id),
   }));
 }
+
+/** [RF-VAQ-11] Verifica si una tienda ya ingresó a su inventario el pedido de una vaquita COMPLETA. */
+export async function haRecibidoPedidoTienda(canastaId: string, tiendaId: string): Promise<boolean> {
+  const registro = await db.auditLog.findFirst({
+    where: {
+      evento: "VAQUITA_PEDIDO_RECIBIDO",
+      objetivo: `${canastaId}:${tiendaId}`,
+      exito: true,
+    },
+    select: { id: true },
+  });
+  return Boolean(registro);
+}

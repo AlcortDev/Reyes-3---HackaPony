@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { generarMatrizQr } from "./components/QrVaquita";
 import {
   agruparAportacionesPorTienda,
   construirMensajeWhatsApp,
@@ -93,5 +94,21 @@ describe("construirMensajeWhatsApp [RF-VAQ-09]", () => {
     expect(msg).toContain("Coca-Cola 600 ml");
     expect(msg).toContain("70/100");
     expect(msg).toContain("http://localhost:3000/vaquitas/ck123");
+  });
+});
+
+describe("generarMatrizQr [RF-VAQ-10]", () => {
+  it("genera una matriz cuadrada con patrones de búsqueda ISO 18004 en las 3 esquinas", () => {
+    const m = generarMatrizQr("http://192.168.1.50:3000/vaquitas/cmwnw43j400arw13u59kikqhx");
+    expect(m.length).toBeGreaterThanOrEqual(21);
+    expect(m[0].length).toBe(m.length);
+    // Esquinas exteriores y centro (3,3) de los 3 finder patterns deben ser oscuros (true)
+    const n = m.length;
+    expect(m[0][0]).toBe(true);
+    expect(m[3][3]).toBe(true);
+    expect(m[0][n - 1]).toBe(true);
+    expect(m[3][n - 4]).toBe(true);
+    expect(m[n - 1][0]).toBe(true);
+    expect(m[n - 4][3]).toBe(true);
   });
 });

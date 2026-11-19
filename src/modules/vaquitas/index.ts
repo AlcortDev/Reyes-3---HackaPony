@@ -20,6 +20,7 @@ export {
   getVaquitaAbiertaPorProducto,
   getAportacionesPorTienda,
   listarProductosParaVaquita,
+  haRecibidoPedidoTienda,
 } from "./queries";
 export { aportarAVaquita, crearVaquita, recibirPedidoVaquita } from "./actions";
 export { VaquitasLista, BarraVaquita } from "./components/VaquitasLista";
