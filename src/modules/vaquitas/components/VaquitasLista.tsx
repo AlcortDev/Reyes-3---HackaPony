@@ -2,12 +2,25 @@
 // [RF-VAQ-01, RF-VAQ-06, RF-VAQ-08] Lista de vaquitas con barra de progreso, sugerencias de bajo stock, filtros y creación.
 // Dueño: Jesús.
 import Link from "next/link";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { formatoMoneda } from "@/shared/utils";
 import { crearVaquita } from "../actions";
 import { tiempoRestante } from "../logic";
 import type { ProductoCatalogoDTO, VaquitaDTO } from "../types";
+import { SelectorProductoVaquita } from "./SelectorProductoVaquita";
+import { SelectorVaquita } from "./SelectorVaquita";
 
 export interface SugerenciaBajoStock {
   productoId: string;
@@ -185,21 +198,22 @@ export function VaquitasLista({
     return v.estado === filtro;
   });
 
-  return (
+  const contenido = (
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">🐄 Vaquitas de la colonia</h1>
-          <p className="text-sm text-gray-600">Júntate con otras tienditas para comprar a precio de mayoreo</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-secondary">🐄 Vaquitas de la colonia</h1>
+          <p className="text-xl font-semibold text-primary-oscuro">Júntate con otras tienditas para comprar a precio de mayoreo</p>
         </div>
         {productos.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setMostrarCrear((prev) => !prev)}
-            className="min-h-11 shrink-0 rounded-xl bg-green-700 px-3.5 py-2 text-sm font-bold text-white shadow-xs active:bg-green-800"
-          >
-            {mostrarCrear ? "✕ Cerrar" : "+ Armar vaquita"}
-          </button>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="min-h-11 shrink-0 rounded-xl bg-green-700 px-3.5 py-2 text-sm font-bold text-white shadow-xs hover:bg-green-800 active:bg-green-800"
+            >
+              + Armar vaquita
+            </button>
+          </DialogTrigger>
         )}
       </div>
 
@@ -236,7 +250,7 @@ export function VaquitasLista({
                   {vaquitaAbierta ? (
                     <Link
                       href={`/vaquitas/${vaquitaAbierta.id}`}
-                      className="inline-flex min-h-10 items-center rounded-lg bg-green-700 px-3 py-1.5 text-xs font-bold text-white"
+                      className="inline-flex min-h-10 items-center rounded-lg bg-green-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-800"
                     >
                       🐄 Unirme ({vaquitaAbierta.porcentaje}%) →
                     </Link>
@@ -244,7 +258,7 @@ export function VaquitasLista({
                     <button
                       type="button"
                       onClick={() => abrirCrearConProducto(productoCatalogo.id)}
-                      className="inline-flex min-h-10 items-center rounded-lg border border-amber-600 bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-950"
+                      className="inline-flex min-h-10 items-center rounded-lg border border-amber-600 bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-950 hover:bg-amber-200"
                     >
                       + Armar vaquita
                     </button>
@@ -257,119 +271,132 @@ export function VaquitasLista({
       )}
 
       {/* Formulario para armar nueva vaquita [RF-VAQ-06] */}
-      {mostrarCrear && productos.length > 0 && (
-        <form onSubmit={handleCrear} className="space-y-3 rounded-xl border-2 border-green-700 bg-green-50/70 p-4 shadow-sm">
-          <h2 className="text-lg font-bold text-green-950">🐄 Armar nueva vaquita para la colonia</h2>
-
-          <div>
-            <label htmlFor="vaq-producto" className="block text-sm font-semibold text-gray-800">
-              Producto a surtir
-            </label>
-            <select
-              id="vaq-producto"
-              value={productoId}
-              onChange={(e) => cambiarProducto(e.target.value)}
-              className="mt-1 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-base"
-            >
-              {productos.map((p) => (
-                <option key={p.id} value={p.id} disabled={p.tieneVaquitaAbierta}>
-                  {p.nombre} — Menudeo: {formatoMoneda(p.precioMenudeo)}/{p.unidad}
-                  {p.tieneVaquitaAbierta ? " (Ya tiene vaquita abierta)" : ""}
-                </option>
-              ))}
-            </select>
+      {productos.length > 0 && (
+        <DialogContent showCloseButton={false} className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-y-auto p-4 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <DialogHeader className="min-w-0 text-left">
+              <DialogTitle>🐄 Armar nueva vaquita para la colonia</DialogTitle>
+              <DialogDescription className="text-base">
+                Elige el producto y junta el pedido con las tiendas de tu colonia.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogClose asChild>
+              <Button type="button" variant="ghost" size="icon-sm" aria-label="Cerrar formulario">
+                <X aria-hidden />
+              </Button>
+            </DialogClose>
           </div>
 
-          <div>
-            <label htmlFor="vaq-proveedor" className="block text-sm font-semibold text-gray-800">
-              Proveedor mayorista
-            </label>
-            <input
-              id="vaq-proveedor"
-              type="text"
-              required
-              value={proveedor}
-              onChange={(e) => setProveedor(e.target.value)}
-              placeholder="Ej. Central de Abastos Morelia"
-              className="mt-1 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-base"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+          <form onSubmit={handleCrear} className="flex min-w-0 flex-col gap-3">
             <div>
-              <label htmlFor="vaq-meta" className="block text-sm font-semibold text-gray-800">
-                Meta ({productoSeleccionado?.unidad ?? "unidades"})
+              <label htmlFor="vaq-producto" className="block text-base font-bold text-secondary">
+                Producto a surtir
               </label>
-              <input
-                id="vaq-meta"
-                type="number"
-                min={2}
-                max={100000}
-                required
-                value={metaUnidades}
-                onChange={(e) => setMetaUnidades(e.target.value)}
-                className="mt-1 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-lg font-bold"
+              <SelectorProductoVaquita
+                id="vaq-producto"
+                value={productoId}
+                onValueChange={cambiarProducto}
+                productos={productos}
               />
             </div>
 
             <div>
-              <label htmlFor="vaq-precio" className="block text-sm font-semibold text-gray-800">
-                Precio mayoreo ($ MXN)
+              <label htmlFor="vaq-proveedor" className="block text-base font-bold text-secondary">
+                Proveedor mayorista
               </label>
               <input
-                id="vaq-precio"
-                type="number"
-                step="0.5"
-                min="0.5"
+                id="vaq-proveedor"
+                type="text"
                 required
-                value={precioMayoreo}
-                onChange={(e) => setPrecioMayoreo(e.target.value)}
-                className="mt-1 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-lg font-bold text-green-800"
+                value={proveedor}
+                onChange={(e) => setProveedor(e.target.value)}
+                placeholder="Ej. Central de Abastos Morelia"
+                className="mt-1 min-h-11 w-full rounded-lg border-0 bg-card px-3 text-base font-bold text-primary-oscuro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               />
             </div>
-          </div>
 
-          {productoSeleccionado && (
-            <p className="rounded-lg bg-white/90 px-3 py-2 text-sm text-gray-700">
-              Precio menudeo: <strong>{formatoMoneda(productoSeleccionado.precioMenudeo)}</strong> · Ahorro por{" "}
-              {productoSeleccionado.unidad}:{" "}
-              <strong className="text-green-700">
-                {formatoMoneda(Math.max(0, productoSeleccionado.precioMenudeo - Number(precioMayoreo || 0)))}
-              </strong>
-            </p>
-          )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="vaq-meta" className="block text-base font-bold text-secondary">
+                  Meta ({productoSeleccionado?.unidad ?? "unidades"})
+                </label>
+                <input
+                  id="vaq-meta"
+                  type="number"
+                  inputMode="numeric"
+                  min={2}
+                  max={100000}
+                  required
+                  value={metaUnidades}
+                  onChange={(e) => setMetaUnidades(e.target.value)}
+                  className="mt-1 min-h-11 w-full rounded-lg border-0 bg-card px-3 text-base font-bold text-primary-oscuro [appearance:textfield] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+              </div>
 
-          <div>
-            <label htmlFor="vaq-cierre" className="block text-sm font-semibold text-gray-800">
-              Tiempo para juntar la meta
-            </label>
-            <select
-              id="vaq-cierre"
-              value={horasCierre}
-              onChange={(e) => setHorasCierre(e.target.value)}
-              className="mt-1 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-base"
+              <div>
+                <label htmlFor="vaq-precio" className="block text-base font-bold text-secondary">
+                  Precio mayoreo ($ MXN)
+                </label>
+                <input
+                  id="vaq-precio"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.5"
+                  min="0.5"
+                  required
+                  value={precioMayoreo}
+                  onChange={(e) => setPrecioMayoreo(e.target.value)}
+                  className="mt-1 min-h-11 w-full rounded-lg border-0 bg-card px-3 text-base font-bold text-primary-oscuro [appearance:textfield] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+              </div>
+            </div>
+
+            {productoSeleccionado && (
+              <p className="rounded-lg bg-white/90 px-3 py-2 text-sm text-gray-700">
+                Precio menudeo: <strong>{formatoMoneda(productoSeleccionado.precioMenudeo)}</strong> · Ahorro por{" "}
+                {productoSeleccionado.unidad}:{" "}
+                <strong className="text-green-700">
+                  {formatoMoneda(Math.max(0, productoSeleccionado.precioMenudeo - Number(precioMayoreo || 0)))}
+                </strong>
+              </p>
+            )}
+
+            <div>
+              <label htmlFor="vaq-cierre" className="block text-base font-bold text-secondary">
+                Tiempo para juntar la meta
+              </label>
+              <SelectorVaquita
+                id="vaq-cierre"
+                value={horasCierre}
+                onValueChange={setHorasCierre}
+                etiqueta="Tiempo para juntar la meta"
+                opciones={[
+                  { valor: "12", texto: "12 horas (Urgente para mañana)" },
+                  { valor: "24", texto: "1 día (24 horas)" },
+                  { valor: "48", texto: "2 días (48 horas)" },
+                  { valor: "72", texto: "3 días (72 horas)" },
+                ]}
+              />
+            </div>
+
+            {errorCrear && (
+              <p role="alert" className="rounded-lg bg-red-100 px-3 py-2 text-sm font-semibold text-red-800">
+                ⚠️ {errorCrear}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isPending}
+              className="min-h-12 w-full rounded-xl bg-green-700 px-4 py-3 text-base font-bold text-white shadow-sm enabled:hover:bg-green-800 disabled:opacity-50"
             >
-              <option value="12">12 horas (Urgente para mañana)</option>
-              <option value="24">1 día (24 horas)</option>
-              <option value="48">2 días (48 horas)</option>
-              <option value="72">3 días (72 horas)</option>
-            </select>
-          </div>
-
-          {errorCrear && (
-            <p role="alert" className="rounded-lg bg-red-100 px-3 py-2 text-sm font-semibold text-red-800">
-              ⚠️ {errorCrear}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={isPending}
-            className="min-h-12 w-full rounded-xl bg-green-700 px-4 py-3 text-base font-bold text-white shadow-sm disabled:opacity-50"
-          >
-            {isPending ? "Publicando vaquita…" : "🐄 Publicar vaquita en la colonia"}
-          </button>
-        </form>
+              {isPending ? "Publicando vaquita…" : "🐄 Publicar vaquita en la colonia"}
+            </button>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancelar</Button>
+            </DialogClose>
+          </form>
+        </DialogContent>
       )}
 
       {/* Filtros rápidos con objetivos táctiles ≥ 44px [RNF-02] */}
@@ -380,7 +407,7 @@ export function VaquitasLista({
           aria-selected={filtro === "TODAS"}
           onClick={() => setFiltro("TODAS")}
           className={`min-h-11 rounded-xl px-3 py-2 text-sm font-semibold transition ${
-            filtro === "TODAS" ? "bg-primary-oscuro text-white shadow-xs" : "bg-white text-gray-700 border border-gray-200"
+            filtro === "TODAS" ? "bg-primary-oscuro text-white shadow-xs hover:bg-foreground" : "bg-white text-gray-700 border border-gray-200 hover:bg-muted"
           }`}
         >
           Todas ({vaquitas.length})
@@ -391,7 +418,7 @@ export function VaquitasLista({
           aria-selected={filtro === "ABIERTA"}
           onClick={() => setFiltro("ABIERTA")}
           className={`min-h-11 rounded-xl px-3 py-2 text-sm font-semibold transition ${
-            filtro === "ABIERTA" ? "bg-green-700 text-white shadow-xs" : "bg-white text-gray-700 border border-gray-200"
+            filtro === "ABIERTA" ? "bg-green-700 text-white shadow-xs hover:bg-green-800" : "bg-white text-gray-700 border border-gray-200 hover:bg-muted"
           }`}
         >
           🐄 Abiertas ({abiertasCount})
@@ -403,8 +430,8 @@ export function VaquitasLista({
           onClick={() => setFiltro("COMPLETA")}
           className={`min-h-11 rounded-xl px-3 py-2 text-sm font-semibold transition ${
             filtro === "COMPLETA"
-              ? "bg-emerald-700 text-white shadow-xs"
-              : "bg-white text-gray-700 border border-gray-200"
+              ? "bg-emerald-700 text-white shadow-xs hover:bg-emerald-800"
+              : "bg-white text-gray-700 border border-gray-200 hover:bg-muted"
           }`}
         >
           🎉 Completas ({completasCount})
@@ -465,5 +492,11 @@ export function VaquitasLista({
         </ul>
       )}
     </section>
+  );
+
+  return (
+    <Dialog open={mostrarCrear && productos.length > 0} onOpenChange={setMostrarCrear}>
+      {contenido}
+    </Dialog>
   );
 }

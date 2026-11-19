@@ -11,6 +11,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Field, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import type { ItemInventarioDTO } from "../types";
 import { ControlesStock } from "./ControlesStock";
 import { ProductoEncabezado } from "./ProductoEncabezado";
@@ -34,7 +35,6 @@ export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
     <section className="flex min-w-0 flex-col gap-5">
       <header className="flex flex-col gap-1">
         <h1 className="text-3xl font-extrabold tracking-tight text-secondary">Mi inventario</h1>
-        <p className="text-muted-foreground">Una venta con −. Un surtido con +.</p>
       </header>
       {porAgotarse > 0 && (
         <Alert variant="warning" role="status">
@@ -44,17 +44,19 @@ export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
         </Alert>
       )}
       {items.length > 0 && (
-        <div className="flex flex-col gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-x-4">
-          <InputGroup>
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <InputGroup className={cn("col-span-2", lectorAbierto ? "lg:col-span-2" : "lg:col-span-1")}>
             <InputGroupInput type="search" aria-label="Buscar producto" placeholder="Buscar producto"
               value={busqueda} onChange={(event) => setBusqueda(event.target.value)} />
             <InputGroupAddon><Search aria-hidden="true" /></InputGroupAddon>
           </InputGroup>
-          <Field orientation="horizontal" className="w-fit gap-2">
+          <Field orientation="horizontal" className="min-h-12 w-fit gap-2">
             <Checkbox id={filtroId} checked={soloPorSurtir} onCheckedChange={(valor) => setSoloPorSurtir(valor === true)} />
             <FieldLabel htmlFor={filtroId} className="min-h-11 cursor-pointer">Por surtir</FieldLabel>
           </Field>
-          <div className="lg:col-span-2"><LectorCodigo bloqueado={estado.bloqueado} onAbiertoChange={setLectorAbierto} /></div>
+          <div className={cn(lectorAbierto ? "col-span-2 w-full lg:col-span-3" : "justify-self-end")}>
+            <LectorCodigo bloqueado={estado.bloqueado} onAbiertoChange={setLectorAbierto} />
+          </div>
         </div>
       )}
       {estado.aviso && (

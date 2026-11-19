@@ -8,6 +8,7 @@ import { BotonSalir } from "@/modules/auth";
 import { Logo } from "@/shared/components";
 import type { EstatusVerificacion, TipoDocumento } from "@/shared/types";
 import type { MiTiendaDTO } from "../queries";
+import { EstructuraTienda } from "./EstructuraTienda";
 import { ResubirDocumentos } from "./ResubirDocumentos";
 
 const ESTATUS: Record<EstatusVerificacion, { titulo: string; texto: string; clase: string; Icono: typeof Clock }> = {
@@ -74,12 +75,16 @@ function Dato({ Icono, etiqueta, valor }: { Icono: typeof User; etiqueta: string
 }
 
 export function PerfilTienda({ tienda }: { tienda: MiTiendaDTO | null }) {
-  return (
-    <div className="space-y-5">
-      <header className="flex items-center justify-between">
-        <Logo />
-        <BotonSalir />
-      </header>
+  const contenido = (
+    <div className="mx-auto w-full max-w-md space-y-5">
+      {tienda?.estatusVerificacion === "APROBADA" ? (
+        <h1 className="text-3xl font-extrabold tracking-tight text-secondary">Mi cuenta</h1>
+      ) : (
+        <header className="flex items-center justify-between">
+          <Logo />
+          <BotonSalir />
+        </header>
+      )}
 
       {!tienda ? (
         <Card>
@@ -140,4 +145,9 @@ export function PerfilTienda({ tienda }: { tienda: MiTiendaDTO | null }) {
       )}
     </div>
   );
+
+  if (tienda?.estatusVerificacion === "APROBADA") {
+    return <EstructuraTienda nombre={tienda.nombre}>{contenido}</EstructuraTienda>;
+  }
+  return <main className="mx-auto max-w-md p-4 pb-10">{contenido}</main>;
 }

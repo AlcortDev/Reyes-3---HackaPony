@@ -166,7 +166,7 @@ flowchart LR
 | **RF-VER-06** | **Panel de admin** `/admin/tiendas`: solicitudes por estatus; detalle con fotos, documentos, mapa y datos; botones **Aprobar** y **Rechazar** (motivo obligatorio). Se registra quién revisó y cuándo y se avisa al dueño por correo. | MUST |
 | **RF-VER-07** | **Re-subir documentos** desde `/perfil` cuando la tienda fue RECHAZADA; vuelve a PENDIENTE. | SHOULD |
 | **RF-VER-08** | **Suspender / reactivar** una tienda aprobada (motivo obligatorio). | COULD |
-| **RF-TIE-01** | En celular y tablet, el encabezado muestra el nombre de la tienda actual (de la sesión) como texto y un botón de menú a la derecha. El menú abre un panel con **Mi cuenta** (enlace a `/perfil`) y **Salir**. En PC, el menú lateral conserva el acceso al perfil y el cierre de sesión. | MUST |
+| **RF-TIE-01** | En celular y tablet, el encabezado muestra el nombre de la tienda actual (de la sesión) como texto y un botón de menú a la derecha. El menú abre un panel con **Mi cuenta** (enlace a `/perfil`) y **Salir**. En PC, el menú lateral conserva el acceso al perfil y el cierre de sesión. El perfil de una tienda APROBADA mantiene esta navegación; las demás tiendas conservan su perfil de revisión independiente. | MUST |
 | **RF-TIE-02** | Toda ruta protegida redirige a `/login` si no hay sesión (middleware) y a `/perfil` si la tienda no está APROBADA (layout + guard). | MUST |
 | **RF-TIE-03** | Página `/privacidad` con el aviso de privacidad: qué datos se piden, para qué y cuánto tiempo se guardan. | MUST |
 | **RF-TIE-04** | Una navegación inferior fija da acceso a **Inventario · Vaquitas · Ahorro**, resaltando la sección activa. | MUST |
@@ -206,7 +206,7 @@ flowchart LR
 | **RF-VAQ-03** | Mostrar en el detalle la **lista de aportaciones por tienda** (quién puso cuánto). | MUST |
 | **RF-VAQ-04** | Cuando lo aportado alcanza la meta, la vaquita pasa a **COMPLETA** automáticamente (RN-06) y ya no acepta aportaciones. | MUST |
 | **RF-VAQ-05** | **Tiempo casi real:** el detalle de la vaquita se actualiza solo (polling cada ≤ 2 s) para que otra pantalla vea subir la barra sin recargar. | MUST |
-| **RF-VAQ-06** | **Crear** una vaquita: producto, proveedor, meta de unidades, precio de mayoreo, fecha de cierre. | SHOULD |
+| **RF-VAQ-06** | **Crear** una vaquita: producto, proveedor, meta de unidades, precio de mayoreo, fecha de cierre. El formulario abre en un diálogo modal tanto en móvil como en PC, también al llegar con un producto precargado desde inventario. | SHOULD |
 | **RF-VAQ-07** | Celebración al completar: **confeti** + "¡Precio de mayoreo desbloqueado!". | SHOULD |
 | **RF-VAQ-08** | **Cuenta regresiva** al cierre; al vencer sin completar, la vaquita pasa a CERRADA (RN-08). | SHOULD |
 | **RF-VAQ-09** | Botón **"Invitar por WhatsApp"** que abre `https://wa.me/?text=<mensaje + link>`. | SHOULD |
@@ -913,6 +913,7 @@ export function resubirDocumentos(formData: FormData): Promise<Resultado>; // RF
 export function getMiTienda(): Promise<MiTiendaDTO | null>;              // tienda del usuario en sesión, con estatus y motivo
 export function getTiendaActual(): Promise<TiendaDTO | null>;            // tienda APROBADA de la sesión
 export { RegistroWizard, PerfilTienda, BannerEstatus, HeaderTienda } from "./components";
+export function EstructuraTienda(props: { nombre: string; children: React.ReactNode }): React.JSX.Element; // estructura visual; el consumidor valida el acceso
 ```
 
 #### `@/modules/admin`

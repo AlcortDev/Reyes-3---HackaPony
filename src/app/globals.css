@@ -24,6 +24,7 @@
   --popover: #ffffff;
   --popover-foreground: var(--foreground);
   --primary: var(--brand-primary);
+  --primary-hover: color-mix(in srgb, var(--primary) 88%, black);
   --primary-foreground: #13391d;
   --secondary-hover: #205b22;
   --primary-oscuro: var(--primary-foreground);
@@ -64,6 +65,7 @@
   --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-baloo), var(--font-nunito), ui-rounded, system-ui, sans-serif;
   --color-primary-oscuro: var(--primary-oscuro);
+  --color-primary-hover: var(--primary-hover);
   --color-secondary-hover: var(--secondary-hover);
   --color-rosa: var(--rosa);
   --shadow-tarjeta: var(--sombra-tarjeta);
@@ -137,6 +139,11 @@
   select,
   textarea {
     font-size: 1rem;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  select:not(:disabled) {
+    cursor: pointer;
   }
   :focus-visible {
     outline: 3px solid var(--ring);

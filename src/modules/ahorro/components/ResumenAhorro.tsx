@@ -18,8 +18,8 @@ export function ResumenAhorro({
   return (
     <section className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">💰 Mi ahorro</h1>
-        <p className="text-sm text-gray-600">
+        <h1 className="text-3xl font-extrabold tracking-tight text-secondary">💰 Mi ahorro</h1>
+        <p className="text-xl font-semibold text-primary-oscuro">
           {nombreTienda ? `Margen recuperado por ${nombreTienda}` : "Dinero que se queda en tu tiendita"} al comprar en
           vaquita
         </p>
