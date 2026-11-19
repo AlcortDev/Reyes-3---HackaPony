@@ -31,7 +31,7 @@ export function VerificarCorreo() {
   return (
     <Card>
       <CardHeader className="items-center text-center">
-        <MailCheck className="mb-2 size-14 text-primary" aria-hidden />
+        <MailCheck className="mb-2 size-14 text-secondary" aria-hidden />
         <CardTitle className="text-2xl">Revisa tu correo</CardTitle>
         <CardDescription className="text-base">
           Te mandamos un enlace para confirmar tu cuenta. Ábrelo y luego entra a La Vaquita.

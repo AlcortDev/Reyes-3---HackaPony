@@ -77,7 +77,7 @@ export function LoginForm() {
             {cargando ? "Entrando…" : "Entrar"}
           </Button>
           <p className="text-center">
-            <Link href="/recuperar" className="text-primary underline underline-offset-4">
+            <Link href="/recuperar" className="text-accent underline underline-offset-4">
               ¿Olvidaste tu contraseña?
             </Link>
           </p>

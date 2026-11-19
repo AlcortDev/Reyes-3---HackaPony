@@ -1,44 +1,59 @@
 @import "tailwindcss";
 
-/* ─────────────────────────────────────────────────────────────
-   Tema "La Vaquita" — Sebastían
-   Verde nopal (primario) · crema (fondo) · amarillo maíz (acento)
-   Variables con los nombres que usa shadcn/ui (Tailwind 4).
-   ───────────────────────────────────────────────────────────── */
-
+/* Marca → roles semánticos → utilidades Tailwind 4 y shadcn.
+   El foreground de marca es una superficie clara; el texto general es oscuro. */
 :root {
-  --radius: 0.875rem;
+  --brand-primary: #23c71f;
+  --brand-secondary: #276e29;
+  --brand-foreground: #d6f2cb;
+  --brand-accent: #2479b5;
+  --brand-accent-strong: #4b6194;
 
-  --background: #fbf8f1;           /* crema */
-  --foreground: #1c2a1f;           /* casi negro verdoso: buen contraste */
+  --radius: 1rem;
+  --background: #f6faf4;
+  --foreground: #1b3220;
   --card: #ffffff;
-  --card-foreground: #1c2a1f;
+  --card-foreground: var(--foreground);
   --popover: #ffffff;
-  --popover-foreground: #1c2a1f;
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand-primary);
+  --primary-foreground: #13391d;
+  --secondary: var(--brand-secondary);
+  --secondary-foreground: #ffffff;
+  --muted: #ecf3e9;
+  --muted-foreground: #51634f;
+  --accent: var(--brand-accent);
+  --accent-foreground: #ffffff;
+  --accent-strong: var(--brand-accent-strong);
+  --accent-strong-foreground: #ffffff;
+  --info-surface: #eaf3fb;
+  --surface-highlight: var(--brand-foreground);
+  --surface-highlight-foreground: var(--brand-secondary);
 
-  --primary: #1f7a3f;              /* verde nopal */
-  --primary-foreground: #ffffff;
-  --secondary: #eef4ec;            /* verde muy claro */
-  --secondary-foreground: #1f4d2e;
-  --muted: #f1ede3;
-  --muted-foreground: #5d6b60;
-  --accent: #fde68a;               /* amarillo maíz */
-  --accent-foreground: #5b3d00;
-  --destructive: #c0392b;          /* rojo chile */
+  --destructive: #ad342a;
+  --destructive-foreground: #ffffff;
+  --destructive-surface: #fff1ee;
+  --warning: #89530b;
+  --warning-surface: #fff5dd;
+  --success: var(--brand-secondary);
+  --success-surface: var(--brand-foreground);
+  --border: #dce7d7;
+  --input: #73876e;
+  --ring: var(--brand-accent);
 
-  --border: #e3ddcf;
-  --input: #d6cfbf;
-  --ring: #1f7a3f;
-
-  /* Semáforo de stock [RN-01] — siempre acompañado de ícono/texto [RNF-03] */
-  --semaforo-ok: #1f7a3f;
-  --semaforo-bajo: #c98a00;
-  --semaforo-critico: #c0392b;
+  /* [RN-01, RNF-03] Estados acompañados siempre de texto e icono. */
+  --semaforo-ok: var(--success);
+  --semaforo-bajo: var(--warning);
+  --semaforo-critico: var(--destructive);
 }
 
 @theme inline {
   --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
-
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-strong: var(--brand-accent-strong);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -53,14 +68,24 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-strong-foreground: var(--accent-strong-foreground);
+  --color-info-surface: var(--info-surface);
+  --color-surface-highlight: var(--surface-highlight);
+  --color-surface-highlight-foreground: var(--surface-highlight-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-surface: var(--destructive-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-success: var(--success);
+  --color-success-surface: var(--success-surface);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-semaforo-ok: var(--semaforo-ok);
   --color-semaforo-bajo: var(--semaforo-bajo);
   --color-semaforo-critico: var(--semaforo-critico);
-
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -68,25 +93,10 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  html {
-    font-size: 16px; /* [RNF-02] texto base ≥ 16 px */
-  }
-  body {
-    @apply bg-background text-foreground font-sans;
-  }
-  /* Evita el zoom automático de iOS en inputs (necesita ≥ 16 px) */
-  input,
-  select,
-  textarea {
-    font-size: 1rem;
-  }
+  * { @apply border-border outline-ring/50; }
+  html { font-size: 16px; }
+  body { @apply bg-background text-foreground font-sans; }
+  input, select, textarea { font-size: 1rem; }
 }
 
-/* Leaflet: que el mapa no quede encima de diálogos y menús */
-.leaflet-container {
-  z-index: 0;
-  font-family: inherit;
-}
+.leaflet-container { z-index: 0; font-family: inherit; }

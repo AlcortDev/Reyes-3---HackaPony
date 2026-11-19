@@ -17,16 +17,19 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-accent underline-offset-4 hover:underline",
+        accent: "bg-accent text-accent-foreground hover:bg-accent-strong",
+        stock: "border border-input bg-card text-foreground hover:bg-muted active:bg-surface-highlight",
       },
       size: {
         // La Vaquita: objetivos táctiles ≥ 44 px [RNF-02]
         default: "h-12 px-5 py-2 has-[>svg]:px-4",
-        xs: "h-8 gap-1 rounded-md px-2 text-sm has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
+        xs: "h-11 gap-1 rounded-md px-3 has-[>svg]:px-2 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-11 gap-1.5 rounded-md px-4 has-[>svg]:px-3",
         lg: "h-14 rounded-lg px-6 text-lg has-[>svg]:px-5",
+        stock: "h-16 min-w-11 flex-col gap-1 px-3 [&_svg:not([class*='size-'])]:size-5",
         icon: "size-12",
-        "icon-xs": "size-8 rounded-md [&_svg:not([class*='size-'])]:size-3",
+        "icon-xs": "size-11 rounded-md [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-11",
         "icon-lg": "size-14",
       },

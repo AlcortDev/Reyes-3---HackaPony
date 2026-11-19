@@ -31,7 +31,7 @@ export function Logo({ className, conTexto = true }: { className?: string; conTe
     <span className={cn("inline-flex items-center gap-2", className)}>
       <IconoVaquita />
       {conTexto && (
-        <span className="text-2xl font-extrabold tracking-tight text-primary">
+        <span className="text-2xl font-extrabold tracking-tight text-secondary">
           La Vaquita
         </span>
       )}

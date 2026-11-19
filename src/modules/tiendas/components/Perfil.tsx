@@ -14,7 +14,7 @@ const ESTATUS: Record<EstatusVerificacion, { titulo: string; texto: string; clas
   PENDIENTE: {
     titulo: "Tu tienda está en revisión",
     texto: "Estamos revisando tus documentos. Te avisamos por correo en cuanto la aprobemos.",
-    clase: "border-accent bg-accent/40 text-accent-foreground",
+    clase: "border-accent/30 bg-info-surface text-accent-strong",
     Icono: Clock,
   },
   APROBADA: {
@@ -125,7 +125,7 @@ export function PerfilTienda({ tienda }: { tienda: MiTiendaDTO | null }) {
                         rel="noreferrer"
                         className="flex min-h-11 items-center gap-3 rounded-md px-2 hover:bg-muted"
                       >
-                        <FileText className="size-5 text-primary" aria-hidden />
+                        <FileText className="size-5 text-secondary" aria-hidden />
                         <span className="underline underline-offset-4">{NOMBRE_DOCUMENTO[d.tipo]}</span>
                       </a>
                     </li>

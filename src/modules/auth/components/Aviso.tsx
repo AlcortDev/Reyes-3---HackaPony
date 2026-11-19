@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const ESTILOS = {
   error: { Icono: AlertCircle, clase: "border-destructive/30 bg-destructive/10 text-destructive", rol: "alert" as const },
   exito: { Icono: CheckCircle2, clase: "border-primary/30 bg-secondary text-secondary-foreground", rol: "status" as const },
-  info: { Icono: Info, clase: "border-accent bg-accent/40 text-accent-foreground", rol: "status" as const },
+  info: { Icono: Info, clase: "border-accent/30 bg-info-surface text-accent-strong", rol: "status" as const },
 };
 
 export function Aviso({ tipo, children }: { tipo: keyof typeof ESTILOS; children: React.ReactNode }) {

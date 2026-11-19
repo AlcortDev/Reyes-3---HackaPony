@@ -27,14 +27,14 @@ export function Navbar() {
                 href={href}
                 aria-current={activa ? "page" : undefined}
                 className={cn(
-                  "flex min-h-16 flex-col items-center justify-center gap-0.5 text-sm font-semibold transition-colors",
-                  activa ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                  "flex min-h-20 flex-col items-center justify-center gap-1 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-ring",
+                  activa ? "text-secondary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <span
                   className={cn(
                     "flex h-8 w-14 items-center justify-center rounded-full transition-colors",
-                    activa && "bg-secondary",
+                    activa && "bg-surface-highlight",
                   )}
                 >
                   <Icono className="size-6" aria-hidden />

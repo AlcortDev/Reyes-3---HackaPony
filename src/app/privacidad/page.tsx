@@ -83,7 +83,7 @@ export default function PrivacidadPage() {
       </Seccion>
 
       <p className="border-t pt-6">
-        <Link href="/registro" className="text-primary underline underline-offset-4">
+        <Link href="/registro" className="text-accent underline underline-offset-4">
           Volver al registro
         </Link>
       </p>
