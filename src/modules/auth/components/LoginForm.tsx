@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/shared/auth-client";
+import { destinoSeguro } from "../destino";
 import { loginSchema } from "../schemas";
 import { Aviso } from "./Aviso";
 import { CampoContrasena } from "./CampoContrasena";
@@ -49,7 +50,9 @@ export function LoginForm() {
       }
       return;
     }
-    router.replace("/"); // la raíz redirige según rol y estatus
+    // A donde iba (ej. el QR de una vaquita) o a la raíz, que redirige según rol y estatus.
+    // Si su tienda no está aprobada, el layout protegido lo manda a /perfil de todos modos.
+    router.replace(destinoSeguro(params.get("siguiente"), window.location.origin));
     router.refresh();
   }
 
