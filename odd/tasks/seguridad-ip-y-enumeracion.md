@@ -10,10 +10,10 @@ Objetivo: cerrar los dos hallazgos de la auditoría sin cambiar contratos públi
 
 ## Tasks
 
-T1 — S1 — inline — IP segura: helper puro + env + `advanced.ipAddress` + docs — completado, commit abajo
-T2 — S2 — inline — error genérico en hook `before` + test — completado, commit abajo
+T1 — S1 — inline — IP segura: helper puro + env + `advanced.ipAddress` + docs — completado en `61965f0`
+T2 — S2 — inline — error genérico en hook `before` + test — completado en `61965f0`
 
-Un solo work-unit para T1 y T2: comparten `auth.ts`, `index.ts` y `docs/SRS.md`, y separarlos dejaría commits intermedios que no compilan. Risk: ítem 2 (seguridad) en ambos.
+Un solo work-unit para T1 y T2: comparten `auth.ts`, `index.ts` y `docs/SRS.md`, y separarlos dejaría commits intermedios que no compilan. Risk: ítem 2 (seguridad) en ambos. Entrega: PR #9 a `develop` (`size:exception` por decisión previa del usuario).
 
 ## Log
 
@@ -27,4 +27,10 @@ L4: El verificador confirmó S1 y marcó S2 como bloqueador: `new APIError(...)`
 
 L5: `.env.example` no se pudo editar: el runtime rechaza writes sobre archivos `.env*` (`permission.rejected`). No se sorteó con shell. Las variables quedaron documentadas en `docs/SRS.md` RNF-SEC-04 y propagadas en `docker-compose.yml`. Requiere que el usuario las agregue a su `.env` antes de exponer a producción.
 
-L6: Recheck del verificador: `RAW_BODY_BYTE_IDENTICAL: true | STATUS_IDENTICAL: true` (401 en ambos casos), 4/4 tests enfocados. Scratch del verificador eliminado. Verificación final: 40/40 tests, typecheck y lint limpios. Commit: <por registrar>.
+L6: Recheck del verificador: `RAW_BODY_BYTE_IDENTICAL: true | STATUS_IDENTICAL: true` (401 en ambos casos), 4/4 tests enfocados. Scratch del verificador eliminado. Verificación final: 40/40 tests, typecheck y lint limpios. Work-unit commit: `61965f097f0949d2fb6772a71bf3b9fb2377d723` (base `9109aee`). Rama `hiram` pusheada; PR #9 a `develop`.
+
+L7: RDD assess del commit → `risk: high`, `review_due: true`. Consentimiento del usuario: `granted`. Línea `review-fc1cbf7143671b36`, lenses `review-risk`, `review-readability`, `review-reliability`. El transporte de captura del runtime rechazó el lanzamiento de los revisores (`opencode_review_transport_relay_refused`, `provider_failed`). El lens `review-risk` sí se capturó por relay con los tokens exactos del `capture_operation` (`admission_decision: completed`); los otros dos lenses no se pudieron producir. **Sin veredicto final ni acknowledge**; no se inventó PASS. No es defecto reportable de Gentle AI: la falla fue del runtime que despacha, no de una invocación de Gentle AI, así que no hay reporte ni handoff de consentimiento. La revisión es informativa para la entrega (política ordinaria del repo), por lo que el PR sigue su curso.
+
+L7b: Hallazgos del lens `review-risk` capturado, todos informativos (ningún bloqueador, ningún `correction_required`): (1) R1-01 WARNING — bucket global mientras no se configure el proxy, decisión consciente ya documentada en RNF-SEC-04; (2) R1-02 WARNING — posible oráculo de timing en el hook `before`, pre-existente (solo cambió el objeto de error); (3) R1-03 SUGGESTION — el test de paridad de bytes usa la misma constante como referencia, así que no detectaría un drift futuro de `BASE_ERROR_CODES` de Better Auth; la paridad contra la fuente real sí fue confirmada por el verificador independiente. No se modifica código: cualquier cambio invalidaría el candidato congelado y la revisión no puede reanudarse mientras el transporte esté indisponible. R1-03 queda como follow-up.
+
+L8: Para producción el usuario debe agregar a su `.env` `CLIENT_IP_HEADER` o `TRUSTED_PROXIES` (documentado en RNF-SEC-04 y propagado en `docker-compose.yml`); `.env.example` quedó sin editar por restricción de permisos del runtime sobre archivos `.env*`.
