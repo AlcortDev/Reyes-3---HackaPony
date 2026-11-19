@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { LoaderCircle, Minus, Plus } from "lucide-react";
+import { ClipboardCheck, LoaderCircle, Minus, Plus } from "lucide-react";
 import type { ItemInventarioDTO } from "../types";
 import estilos from "./inventario.module.css";
 
@@ -10,16 +10,24 @@ interface Props {
   bloqueado: boolean;
   pendiente: boolean;
   guardar: (item: ItemInventarioDTO, tipo: "ENTRADA" | "SALIDA", cantidad: number) => Promise<void>;
+  ajustar: (item: ItemInventarioDTO, existencias: number) => Promise<void>;
 }
 
-export function ControlesStock({ item, bloqueado, pendiente, guardar }: Props) {
+export function ControlesStock({ item, bloqueado, pendiente, guardar, ajustar }: Props) {
   const [captura, setCaptura] = useState(false);
-  const [cantidad, setCantidad] = useState("1");
+  // Vacío a propósito: con un "1" precargado, lo que se escribía se pegaba (5 → "15").
+  const [cantidad, setCantidad] = useState("");
   const formulario = useRef<HTMLFormElement>(null);
   const unidades: Record<string, string> = { pieza: "piezas", bolsa: "bolsas", botella: "botellas", paquete: "paquetes" };
+  const n = Number(cantidad);
+  const valida = cantidad !== "" && Number.isInteger(n) && n >= 0;
 
   function otraCantidad(tipo: "ENTRADA" | "SALIDA") {
-    if (formulario.current?.reportValidity()) void guardar(item, tipo, Number(cantidad));
+    if (formulario.current?.reportValidity() && n >= 1) void guardar(item, tipo, n).then(() => setCantidad(""));
+  }
+
+  function contar() {
+    if (formulario.current?.reportValidity()) void ajustar(item, n).then(() => setCantidad(""));
   }
 
   return (
@@ -54,15 +62,30 @@ export function ControlesStock({ item, bloqueado, pendiente, guardar }: Props) {
         <form id={`cantidad-${item.id}`} ref={formulario} className={estilos.formCantidad}
           onSubmit={(event) => event.preventDefault()}>
           <label htmlFor={`unidades-${item.id}`}>¿Cuántas unidades?</label>
-          <input id={`unidades-${item.id}`} type="number" inputMode="numeric" min={1} max={10_000}
-            step={1} required value={cantidad} disabled={bloqueado}
+          <input id={`unidades-${item.id}`} type="number" inputMode="numeric" min={0} max={10_000}
+            step={1} required value={cantidad} disabled={bloqueado} placeholder="Escribe un número"
+            onFocus={(event) => event.currentTarget.select()}
             onChange={(event) => setCantidad(event.target.value)} />
+          {valida && (
+            <p className={estilos.previa} aria-live="polite">
+              Vender {n}: quedan <strong>{Math.max(0, item.stock - n)}</strong> · Surtir {n}: quedan <strong>{item.stock + n}</strong>
+            </p>
+          )}
           <div className={estilos.accionesCantidad}>
             <button type="button" className={estilos.botonSecundario}
-              disabled={bloqueado || item.stock === 0} onClick={() => otraCantidad("SALIDA")}>Registrar salida</button>
+              disabled={bloqueado || item.stock === 0 || !valida || n < 1 || n > item.stock} onClick={() => otraCantidad("SALIDA")}>
+              <Minus aria-hidden="true" size={18} /> Vendí {valida && n >= 1 ? n : ""}
+            </button>
             <button type="button" className={estilos.botonPrimario}
-              disabled={bloqueado} onClick={() => otraCantidad("ENTRADA")}>Registrar surtido</button>
+              disabled={bloqueado || !valida || n < 1} onClick={() => otraCantidad("ENTRADA")}>
+              <Plus aria-hidden="true" size={18} /> Me llegaron {valida && n >= 1 ? n : ""}
+            </button>
           </div>
+          <button type="button" className={`${estilos.botonSecundario} ${estilos.botonConteo}`}
+            disabled={bloqueado || !valida || n === item.stock} onClick={contar}>
+            <ClipboardCheck aria-hidden="true" size={18} />
+            {valida ? `Tengo ${n} en total (corregir)` : "Tengo esta cantidad en total (corregir)"}
+          </button>
         </form>
       )}
     </div>

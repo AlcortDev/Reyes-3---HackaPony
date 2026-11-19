@@ -18,3 +18,17 @@ describe("diasParaAgotarse [RN-07]", () => {
     expect(diasParaAgotarse(10, 0)).toBeNull();
   });
 });
+
+import { movimientoParaAjuste } from "./logic";
+
+describe("movimientoParaAjuste (conteo físico)", () => {
+  it("calcula la entrada o salida que deja el stock en el número contado", () => {
+    expect(movimientoParaAjuste(19, 20)).toEqual({ tipo: "ENTRADA", cantidad: 1 });
+    expect(movimientoParaAjuste(19, 12)).toEqual({ tipo: "SALIDA", cantidad: 7 });
+    expect(movimientoParaAjuste(0, 30)).toEqual({ tipo: "ENTRADA", cantidad: 30 });
+    expect(movimientoParaAjuste(8, 0)).toEqual({ tipo: "SALIDA", cantidad: 8 });
+  });
+  it("sin diferencia no hay movimiento", () => {
+    expect(movimientoParaAjuste(19, 19)).toBeNull();
+  });
+});

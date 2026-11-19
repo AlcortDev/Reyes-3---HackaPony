@@ -17,7 +17,7 @@ vi.mock("@/shared/db", () => ({ db: { $transaction: dobles.transaccion } }));
 vi.mock("next/cache", () => ({ revalidatePath: dobles.revalidar }));
 
 import { NoAutorizadoError } from "@/shared/security";
-import { registrarMovimiento } from "./actions";
+import { ajustarExistencias, registrarMovimiento } from "./actions";
 
 const entrada = { inventarioId: "inv-1", tipo: "ENTRADA" as const, cantidad: 10 };
 
@@ -103,5 +103,61 @@ describe("registrarMovimiento [RF-INV-02/03, RN-02/03]", () => {
     expect(await registrarMovimiento(entrada)).toEqual({
       ok: false, error: "No pudimos confirmar el movimiento. Actualiza el inventario antes de volver a intentarlo.",
     });
+  });
+});
+
+describe("ajustarExistencias — conteo físico \"tengo N en total\"", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    dobles.autorizar.mockResolvedValue({ tienda: { id: "tienda-propia" } });
+    dobles.buscar.mockResolvedValue({ stock: 19 });
+    dobles.actualizar.mockResolvedValue({ count: 1 });
+    dobles.movimiento.mockResolvedValue({ id: "mov-1" });
+    dobles.transaccion.mockImplementation(async (trabajo) => trabajo({
+      inventario: { findFirst: dobles.buscar, updateMany: dobles.actualizar },
+      movimiento: { create: dobles.movimiento },
+    }));
+  });
+
+  it("deja el stock en el número contado y NO lo suma (bug: 19 + 20 = 39)", async () => {
+    await expect(ajustarExistencias({ inventarioId: "inv-1", existencias: 20 }))
+      .resolves.toEqual({ ok: true, data: { stock: 20 } });
+    expect(dobles.actualizar).toHaveBeenCalledWith({
+      where: { id: "inv-1", tiendaId: "tienda-propia", stock: 19 },
+      data: { stock: 20 },
+    });
+    expect(dobles.movimiento).toHaveBeenCalledWith({ data: { inventarioId: "inv-1", tipo: "ENTRADA", cantidad: 1 } });
+  });
+
+  it("si hay menos de las que dice el sistema, registra la diferencia como salida", async () => {
+    await ajustarExistencias({ inventarioId: "inv-1", existencias: 12 });
+    expect(dobles.movimiento).toHaveBeenCalledWith({ data: { inventarioId: "inv-1", tipo: "SALIDA", cantidad: 7 } });
+  });
+
+  it("si el número coincide no registra nada", async () => {
+    await expect(ajustarExistencias({ inventarioId: "inv-1", existencias: 19 }))
+      .resolves.toEqual({ ok: true, data: { stock: 19 } });
+    expect(dobles.actualizar).not.toHaveBeenCalled();
+    expect(dobles.movimiento).not.toHaveBeenCalled();
+  });
+
+  it("no pisa una venta que llegó al mismo tiempo", async () => {
+    dobles.actualizar.mockResolvedValue({ count: 0 });
+    const r = await ajustarExistencias({ inventarioId: "inv-1", existencias: 20 });
+    expect(r.ok).toBe(false);
+    expect(dobles.movimiento).not.toHaveBeenCalled();
+  });
+
+  it("no permite contar el inventario de otra tienda", async () => {
+    dobles.buscar.mockResolvedValue(null);
+    await expect(ajustarExistencias({ inventarioId: "inv-1", existencias: 5 }))
+      .resolves.toEqual({ ok: false, error: "Producto no encontrado" });
+    expect(dobles.buscar).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "inv-1", tiendaId: "tienda-propia" } }));
+  });
+
+  it.each([-1, 1.5, 1_000_001, Number.NaN, "20", null])("rechaza existencias inválidas (%s) sin tocar la BD", async (existencias) => {
+    const r = await ajustarExistencias({ inventarioId: "inv-1", existencias } as { inventarioId: string; existencias: number });
+    expect(r.ok).toBe(false);
+    expect(dobles.transaccion).not.toHaveBeenCalled();
   });
 });
