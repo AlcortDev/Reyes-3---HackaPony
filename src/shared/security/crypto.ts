@@ -1,10 +1,11 @@
 // [RNF-SEC-09] Cifrado de documentos con AES-256-GCM + SHA-256 de integridad.
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
+// Uint8Array<ArrayBuffer> es el tipo que Prisma 6 usa para columnas Bytes.
 export interface DatosCifrados {
-  contenido: Buffer;
-  iv: Buffer;
-  authTag: Buffer;
+  contenido: Uint8Array<ArrayBuffer>;
+  iv: Uint8Array<ArrayBuffer>;
+  authTag: Uint8Array<ArrayBuffer>;
 }
 
 function llave(): Buffer {
@@ -19,7 +20,7 @@ export function cifrar(datos: Buffer): DatosCifrados {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", llave(), iv);
   const contenido = Buffer.concat([cipher.update(datos), cipher.final()]);
-  return { contenido, iv, authTag: cipher.getAuthTag() };
+  return { contenido: new Uint8Array(contenido), iv: new Uint8Array(iv), authTag: new Uint8Array(cipher.getAuthTag()) };
 }
 
 /** Lanza error si el contenido fue alterado (GCM valida el authTag). */
