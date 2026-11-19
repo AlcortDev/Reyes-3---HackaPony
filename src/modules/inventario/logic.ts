@@ -8,6 +8,19 @@ export function nivelStock(stock: number, stockMinimo: number): NivelStock {
   return "ok";
 }
 
+/**
+ * Conteo físico ("tengo N en total"): el movimiento que deja el stock en `existencias`,
+ * para que el historial siga cuadrando. null si no hay nada que corregir.
+ */
+export function movimientoParaAjuste(
+  stockActual: number,
+  existencias: number,
+): { tipo: "ENTRADA" | "SALIDA"; cantidad: number } | null {
+  const diferencia = existencias - stockActual;
+  if (diferencia === 0) return null;
+  return diferencia > 0 ? { tipo: "ENTRADA", cantidad: diferencia } : { tipo: "SALIDA", cantidad: -diferencia };
+}
+
 /** [RN-07] floor(stock / promedio diario de salidas de los últimos 7 días). null = sin datos. */
 export function diasParaAgotarse(stock: number, salidasUltimos7Dias: number): number | null {
   const promedioDiario = salidasUltimos7Dias / 7;

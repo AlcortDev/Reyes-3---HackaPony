@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { INVENTARIO_MOCK } from "../mocks";
 
 vi.stubGlobal("React", React);
-vi.mock("../actions", () => ({ registrarMovimiento: vi.fn() }));
+vi.mock("../actions", () => ({ registrarMovimiento: vi.fn(), ajustarExistencias: vi.fn() }));
 vi.mock("../codigos", () => ({ buscarInventarioPorCodigo: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 

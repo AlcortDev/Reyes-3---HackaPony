@@ -73,3 +73,9 @@ La captura indicada como «Image #1» no llegó adjunta. Esta propuesta parte de
 - `npm run typecheck`, `npm run lint`, `npm test`: 102 pruebas aprobadas y siete pruebas de base real omitidas por su configuración habitual. El build integrado pasó. Las cámaras físicas no forman parte de esta comprobación de diseño.
 
 El usuario de pruebas solicitado se creó exclusivamente en PostgreSQL local, con tienda aprobada y diez productos de ejemplo. Las credenciales no se incluyen en este repositorio. La instancia utilizada por el usuario es `http://localhost:3001`.
+
+## Revisión previa al push
+
+La actualización remota posterior trajo `main` bbe1565 y `develop` 186681f. Se reprodujeron cuatro conflictos con una simulación en un clon temporal y se integraron las correcciones de cantidades/conteo físico y la lista de admin móvil. Se mantuvieron el diseño aprobado, los componentes shadcn y la eliminación del CSS duplicado. El contrato de ajuste quedó documentado en SRS.
+
+Tras resolver: typecheck, lint y 115 pruebas aprobadas (siete de base real omitidas). El mockup volvió a pasar a 360/390/1280 px, incluida la captura vacía, sustitución al enfocar y conteo de cero sin persistencia. La revisión independiente no encontró bloqueantes.

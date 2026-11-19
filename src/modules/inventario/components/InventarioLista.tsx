@@ -72,7 +72,7 @@ export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
             <Card className="h-full">
               <CardHeader><ProductoEncabezado item={item} /></CardHeader>
               <CardContent>
-                <ControlesStock item={item} bloqueado={estado.bloqueado || lectorAbierto} pendiente={estado.pendiente === item.id} guardar={estado.guardar} />
+                <ControlesStock item={item} bloqueado={estado.bloqueado || lectorAbierto} pendiente={estado.pendiente === item.id} guardar={estado.guardar} ajustar={estado.ajustar} />
               </CardContent>
               <CardFooter className="mt-auto flex-col items-stretch gap-2">
                 <Separator />

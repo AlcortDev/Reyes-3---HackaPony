@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { LoaderCircle, Minus, Plus } from "lucide-react";
+import { ClipboardCheck, LoaderCircle, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -12,17 +12,25 @@ interface Props {
   item: ItemInventarioDTO;
   bloqueado: boolean;
   pendiente: boolean;
+  ajustar: (item: ItemInventarioDTO, existencias: number) => Promise<void>;
   guardar: (item: ItemInventarioDTO, tipo: "ENTRADA" | "SALIDA", cantidad: number) => Promise<void>;
 }
 
-export function ControlesStock({ item, bloqueado, pendiente, guardar }: Props) {
+export function ControlesStock({ item, bloqueado, pendiente, guardar, ajustar }: Props) {
   const [captura, setCaptura] = useState(false);
-  const [cantidad, setCantidad] = useState("1");
+  const [cantidad, setCantidad] = useState("");
   const formulario = useRef<HTMLFormElement>(null);
   const unidades: Record<string, string> = { pieza: "piezas", bolsa: "bolsas", botella: "botellas", paquete: "paquetes" };
 
+  const n = Number(cantidad);
+  const valida = cantidad !== "" && Number.isInteger(n) && n >= 0;
+
   function otraCantidad(tipo: "ENTRADA" | "SALIDA") {
-    if (formulario.current?.reportValidity()) void guardar(item, tipo, Number(cantidad));
+    if (formulario.current?.reportValidity() && n >= 1) void guardar(item, tipo, n).then(() => setCantidad(""));
+  }
+
+  function contar() {
+    if (formulario.current?.reportValidity()) void ajustar(item, n).then(() => setCantidad(""));
   }
 
   return (
@@ -60,17 +68,32 @@ export function ControlesStock({ item, bloqueado, pendiente, guardar }: Props) {
           <FieldGroup>
             <Field data-disabled={bloqueado}>
               <FieldLabel htmlFor={`unidades-${item.id}`}>¿Cuántas unidades?</FieldLabel>
-              <Input id={`unidades-${item.id}`} type="number" inputMode="numeric" min={1} max={10_000}
-                step={1} required value={cantidad} disabled={bloqueado}
+              <Input id={`unidades-${item.id}`} type="number" inputMode="numeric" min={0} max={10_000}
+                step={1} required value={cantidad} disabled={bloqueado} placeholder="Escribe un número"
+                onFocus={(event) => event.currentTarget.select()}
                 onChange={(event) => setCantidad(event.target.value)} />
             </Field>
           </FieldGroup>
+          {valida && (
+            <p className="text-muted-foreground" aria-live="polite">
+              Vender {n}: quedan <strong>{Math.max(0, item.stock - n)}</strong> · Surtir {n}: quedan <strong>{item.stock + n}</strong>
+            </p>
+          )}
           <div className="grid gap-2 sm:grid-cols-2">
             <Button type="button" variant="outline"
-              disabled={bloqueado || item.stock === 0} onClick={() => otraCantidad("SALIDA")}>Registrar salida</Button>
+              disabled={bloqueado || item.stock === 0 || !valida || n < 1 || n > item.stock} onClick={() => otraCantidad("SALIDA")}>
+              <Minus aria-hidden="true" data-icon="inline-start" /> Vendí {valida && n >= 1 ? n : ""}
+            </Button>
             <Button type="button"
-              disabled={bloqueado} onClick={() => otraCantidad("ENTRADA")}>Registrar surtido</Button>
+              disabled={bloqueado || !valida || n < 1} onClick={() => otraCantidad("ENTRADA")}>
+              <Plus aria-hidden="true" data-icon="inline-start" /> Me llegaron {valida && n >= 1 ? n : ""}
+            </Button>
           </div>
+          <Button type="button" variant="outline" className="h-auto min-h-12 whitespace-normal"
+            disabled={bloqueado || !valida || n === item.stock} onClick={contar}>
+            <ClipboardCheck aria-hidden="true" data-icon="inline-start" />
+            {valida ? `Tengo ${n} en total (corregir)` : "Tengo esta cantidad en total (corregir)"}
+          </Button>
         </form>
       )}
     </div>

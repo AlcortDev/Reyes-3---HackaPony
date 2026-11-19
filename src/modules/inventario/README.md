@@ -90,3 +90,5 @@ La migración inicial y el seed se aplicaron a esta base nueva. Las cuentas demo
 ## Actualización de diseño del 19 de noviembre
 
 Se integró el diseño de main e230d9d y se aplicó la paleta solicitada mediante Tailwind y shadcn. El inventario conserva dos columnas en PC y la interfaz móvil. Las comprobaciones de frontend aprobaron 102 pruebas, typecheck y lint; las siete pruebas con base real se omitieron en esta revisión. El build integrado pasó y el mockup se revisó a 360, 390 y 1280 px. Las evidencias de esta actualización están en `docs/design/`, separadas de la validación de base y cámara de la entrega anterior.
+
+La integración posterior de main bbe1565 conserva la captura de cantidad inicialmente vacía, la selección del número al enfocar y el conteo físico «Tengo N en total»: registra solo la diferencia, permite cero y rechaza sobrescribir un movimiento concurrente. Las comprobaciones posteriores aprobaron 115 pruebas, typecheck y lint; las siete pruebas de base real quedaron omitidas.

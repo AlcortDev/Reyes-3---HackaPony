@@ -938,7 +938,16 @@ export function registrarMovimiento(input: {
   cantidad: number;
 }): Promise<Resultado<{ stock: number }>>;                     // valida RN-02, RN-03 y que el inventario sea de la tienda en sesión
 
+/** Conteo físico: escribe el total y registra solo la diferencia en una transacción.
+ * Autoriza la tienda de sesión, valida un entero entre 0 y 1,000,000 y rechaza
+ * el ajuste si cambia el stock durante la escritura; no genera movimiento si coincide. */
+export function ajustarExistencias(input: {
+  inventarioId: string;
+  existencias: number;
+}): Promise<Resultado<{ stock: number }>>;
+
 // logic.ts (puras)
+export function movimientoParaAjuste(stockActual: number, existencias: number): { tipo: "ENTRADA" | "SALIDA"; cantidad: number } | null;
 export function nivelStock(stock: number, stockMinimo: number): NivelStock;          // RN-01
 export function diasParaAgotarse(stock: number, salidasUltimos7Dias: number): number | null; // RN-07
 

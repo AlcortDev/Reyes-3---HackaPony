@@ -45,7 +45,7 @@ export function DetalleInventarioContenido({ detalle, vaquita, consultaFallida }
       )}
       <Card>
         <CardHeader><ProductoEncabezado item={item} /></CardHeader>
-        <CardContent><ControlesStock item={item} bloqueado={estado.bloqueado} pendiente={estado.pendiente === item.id} guardar={estado.guardar} /></CardContent>
+        <CardContent><ControlesStock item={item} bloqueado={estado.bloqueado} pendiente={estado.pendiente === item.id} guardar={estado.guardar} ajustar={estado.ajustar} /></CardContent>
         <CardFooter className="flex-col items-stretch gap-4">
           <Separator />
           <p className="flex items-start gap-2 text-muted-foreground">

@@ -29,7 +29,8 @@ const mocks = {
   "@/modules/auth": `import React from "react";
     import {Button} from "@/components/ui/button";
     export function BotonSalir(){return React.createElement(Button,{disabled:true,variant:"ghost",size:"sm"},"Demo")}`,
-  "../actions": `export async function registrarMovimiento(){
+  "../actions": `export const ajustarExistencias=registrarMovimiento;
+    export async function registrarMovimiento(){
     return {ok:false,error:"Esta vista de diseño no registra movimientos. Abre la aplicación para vender o surtir."}
   }`,
   "../codigos": `export async function buscarInventarioPorCodigo(codigo){
@@ -79,6 +80,15 @@ try {
     }
   }
 } catch { /* El mockup usa la fuente de sistema si todavía no hay build local. */ }
+// Conservar las fuentes ya incluidas si la instancia dev no tiene CSS de build.
+if (!fontCSS) {
+  try {
+    const previous = await readFile(path.join(root, "docs/design/mockup-inventario.html"), "utf8");
+    const faces = previous.match(/@font-face\{[^}]*font-family:"(?:Nunito|Baloo) mockup"[^}]*\}/g) || [];
+    fontCSS = [...new Set(faces)].join("");
+    for (const face of faces) embeddedFonts.add(face.includes("Nunito") ? "Nunito" : "Baloo");
+  } catch { /* Primera generación sin build: fuente de sistema. */ }
+}
 if (embeddedFonts.has("Nunito")) fontCSS += ':root{--font-nunito:"Nunito mockup"}';
 if (embeddedFonts.has("Baloo")) fontCSS += ':root{--font-baloo:"Baloo mockup"}';
 const script = bundle.outputFiles[0].text.replaceAll("</script", "<\\/script");
