@@ -15,7 +15,8 @@ export type EventoAuditoria =
   | "TIENDA_RECHAZADA"
   | "TIENDA_SUSPENDIDA"
   | "DOCS_RESUBIDOS"
-  | "DOC_VISTO";
+  | "DOC_VISTO"
+  | "DEMO_REINICIADA";
 
 export interface ContextoAuditoria {
   exito: boolean;

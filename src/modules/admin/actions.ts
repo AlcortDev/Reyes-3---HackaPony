@@ -1,28 +1,131 @@
 "use server";
 // Decisiones del admin sobre tiendas. Dueño: Hiram (servidor).
+import { revalidatePath } from "next/cache";
+import { db } from "@/shared/db";
+import { assertAdmin } from "@/shared/security";
+import { registrarEvento } from "@/shared/security/audit";
+import { enviarCorreo } from "@/shared/mail";
 import type { Resultado } from "@/shared/types";
-
-// TODO(Hiram) [RF-VER-06 · RN-16] en las tres:
-//   1. assertAdmin()
-//   2. validar transición válida (PENDIENTE→APROBADA/RECHAZADA, APROBADA→SUSPENDIDA) y motivoSchema si aplica
-//   3. db.tienda.update({ estatusVerificacion, motivoRechazo, revisadaEn: new Date(), revisadaPorId: admin.id })
-//   4. registrarEvento("TIENDA_APROBADA" | "TIENDA_RECHAZADA" | "TIENDA_SUSPENDIDA")
-//   5. enviarCorreo("tiendaAprobada" | "tiendaRechazada", ...) y revalidatePath("/admin/tiendas")
+import { ok, fallo } from "@/shared/types";
+import { motivoSchema } from "@/modules/tiendas";
 
 export async function aprobarTienda(tiendaId: string): Promise<Resultado> {
-  void tiendaId;
-  return { ok: false, error: "Por implementar (Hiram)" };
+  const admin = await assertAdmin();
+  const tienda = await db.tienda.findUnique({
+    where: { id: tiendaId },
+    include: { usuario: true },
+  });
+  if (!tienda) return fallo("Tienda no encontrada");
+  if (tienda.estatusVerificacion !== "PENDIENTE") {
+    return fallo("Solo se pueden aprobar tiendas en estado pendiente");
+  }
+
+  await db.tienda.update({
+    where: { id: tiendaId },
+    data: {
+      estatusVerificacion: "APROBADA",
+      motivoRechazo: null,
+      revisadaEn: new Date(),
+      revisadaPorId: admin.user.id,
+    },
+  });
+
+  await registrarEvento("TIENDA_APROBADA", {
+    exito: true,
+    userId: admin.user.id,
+    objetivo: tienda.id,
+  });
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  await enviarCorreo("tiendaAprobada", tienda.usuario.email, {
+    nombre: tienda.encargado,
+    tienda: tienda.nombre,
+    url: `${appUrl}/login`,
+  });
+
+  revalidatePath("/admin/tiendas");
+  return ok(undefined);
 }
 
 export async function rechazarTienda(tiendaId: string, motivo: string): Promise<Resultado> {
-  void tiendaId;
-  void motivo;
-  return { ok: false, error: "Por implementar (Hiram)" };
+  const admin = await assertAdmin();
+  const parseMotivo = motivoSchema.safeParse(motivo);
+  if (!parseMotivo.success) {
+    return fallo(parseMotivo.error.issues[0]?.message ?? "Motivo inválido");
+  }
+
+  const tienda = await db.tienda.findUnique({
+    where: { id: tiendaId },
+    include: { usuario: true },
+  });
+  if (!tienda) return fallo("Tienda no encontrada");
+  if (tienda.estatusVerificacion !== "PENDIENTE") {
+    return fallo("Solo se pueden rechazar tiendas en estado pendiente");
+  }
+
+  await db.tienda.update({
+    where: { id: tiendaId },
+    data: {
+      estatusVerificacion: "RECHAZADA",
+      motivoRechazo: parseMotivo.data,
+      revisadaEn: new Date(),
+      revisadaPorId: admin.user.id,
+    },
+  });
+
+  await registrarEvento("TIENDA_RECHAZADA", {
+    exito: true,
+    userId: admin.user.id,
+    objetivo: tienda.id,
+    detalle: { motivo: parseMotivo.data },
+  });
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  await enviarCorreo("tiendaRechazada", tienda.usuario.email, {
+    nombre: tienda.encargado,
+    tienda: tienda.nombre,
+    motivo: parseMotivo.data,
+    url: `${appUrl}/perfil`,
+  });
+
+  revalidatePath("/admin/tiendas");
+  return ok(undefined);
 }
 
 /** [RF-VER-08 · COULD] */
 export async function suspenderTienda(tiendaId: string, motivo: string): Promise<Resultado> {
-  void tiendaId;
-  void motivo;
-  return { ok: false, error: "Por implementar (Hiram)" };
+  const admin = await assertAdmin();
+  const parseMotivo = motivoSchema.safeParse(motivo);
+  if (!parseMotivo.success) {
+    return fallo(parseMotivo.error.issues[0]?.message ?? "Motivo inválido");
+  }
+
+  const tienda = await db.tienda.findUnique({
+    where: { id: tiendaId },
+    include: { usuario: true },
+  });
+  if (!tienda) return fallo("Tienda no encontrada");
+  if (tienda.estatusVerificacion !== "APROBADA") {
+    return fallo("Solo se pueden suspender tiendas aprobadas");
+  }
+
+  await db.tienda.update({
+    where: { id: tiendaId },
+    data: {
+      estatusVerificacion: "SUSPENDIDA",
+      motivoRechazo: parseMotivo.data,
+      revisadaEn: new Date(),
+      revisadaPorId: admin.user.id,
+    },
+  });
+
+  await registrarEvento("TIENDA_SUSPENDIDA", {
+    exito: true,
+    userId: admin.user.id,
+    objetivo: tienda.id,
+    detalle: { motivo: parseMotivo.data },
+  });
+
+  revalidatePath("/admin/tiendas");
+  return ok(undefined);
 }

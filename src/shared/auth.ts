@@ -1,11 +1,13 @@
 // Configuración de Better Auth (servidor). Dueño: Hiram. Ver docs/SRS.md §3.2.1 (RNF-SEC).
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/shared/db";
 import { enviarCorreo } from "@/shared/mail";
 import { hashPassword, verifyPassword } from "@/shared/security/password";
 import { registrarEvento } from "@/shared/security/audit";
+import { estaBloqueada, evaluarIntentoFallido } from "@/shared/security/lockout";
 
 const origenesExtra = (process.env.TRUSTED_ORIGINS ?? "")
   .split(",")
@@ -76,10 +78,63 @@ export const auth = betterAuth({
     },
   },
 
-  // TODO(Hiram) [RF-AUT-04 · RN-14] Bloqueo por cuenta con hooks before/after en "/sign-in/email"
-  //   usando createAuthMiddleware (better-auth/api) + evaluarIntentoFallido / estaBloqueada
-  //   de shared/security/lockout.ts, y registrar LOGIN_OK / LOGIN_FAIL / ACCOUNT_LOCKED.
-  // TODO(Hiram) [RF-AUT-08 · COULD] plugin haveIBeenPwned() de "better-auth/plugins".
+  // [RF-AUT-04 · RN-14] Bloqueo por cuenta con hooks before/after en "/sign-in/email"
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-in/email") {
+        const email = typeof ctx.body?.email === "string" ? ctx.body.email.toLowerCase().trim() : null;
+        if (email) {
+          const user = await db.user.findUnique({ where: { email } });
+          if (user && estaBloqueada(user.lockedUntil, new Date())) {
+            throw new APIError("UNAUTHORIZED", {
+              message: "Cuenta bloqueada por demasiados intentos fallidos. Intenta dentro de 15 minutos.",
+            });
+          }
+        }
+      }
+    }),
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-in/email") {
+        const returned = ctx.context?.returned;
+        const email = typeof ctx.body?.email === "string" ? ctx.body.email.toLowerCase().trim() : null;
+
+        if (returned instanceof Error) {
+          // Intento fallido
+          if (email) {
+            const user = await db.user.findUnique({ where: { email } });
+            if (user) {
+              const ahora = new Date();
+              const { intentos, lockedUntil } = evaluarIntentoFallido(user.failedLoginAttempts, ahora);
+              await db.user.update({
+                where: { id: user.id },
+                data: { failedLoginAttempts: intentos, lockedUntil },
+              });
+              await registrarEvento("LOGIN_FAIL", { exito: false, userId: user.id });
+              if (lockedUntil) {
+                await registrarEvento("ACCOUNT_LOCKED", {
+                  exito: false,
+                  userId: user.id,
+                  detalle: { motivo: "5 intentos fallidos consecutivos", lockedUntil: lockedUntil.toISOString() },
+                });
+              }
+            } else {
+              await registrarEvento("LOGIN_FAIL", { exito: false, detalle: { email } });
+            }
+          }
+        } else {
+          // Intento exitoso
+          const user = (returned as { user?: { id: string } } | undefined)?.user;
+          if (user?.id) {
+            await db.user.update({
+              where: { id: user.id },
+              data: { failedLoginAttempts: 0, lockedUntil: null },
+            });
+            await registrarEvento("LOGIN_OK", { exito: true, userId: user.id });
+          }
+        }
+      }
+    }),
+  },
 
   plugins: [nextCookies()], // nextCookies debe ir al final
 });
