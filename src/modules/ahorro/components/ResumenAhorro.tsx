@@ -85,7 +85,7 @@ export function ResumenAhorro({
             </Link>
           </div>
         ) : (
-          <ul className="space-y-2.5">
+          <ul className="space-y-2.5 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
             {resumen.detalle.map((item) => {
               const esCompleta = item.estado === "COMPLETA";
               const esAbierta = item.estado === "ABIERTA";
