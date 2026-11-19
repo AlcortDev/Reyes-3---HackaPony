@@ -133,13 +133,19 @@ export function RegistroWizard() {
     if (Object.keys(nuevos).length) return;
 
     setEnviando(true);
-    const r = await registrarTienda(new FormData(form.current!));
-    setEnviando(false);
-    if (!r.ok) {
-      setErrorGeneral(r.error);
-      return;
+    try {
+      const r = await registrarTienda(new FormData(form.current!));
+      if (!r.ok) {
+        setErrorGeneral(r.error);
+        return;
+      }
+      router.push(`/verificar-correo?email=${encodeURIComponent(String(d.email ?? ""))}`);
+    } catch {
+      // Red caída o archivos que exceden el límite del servidor
+      setErrorGeneral("No pudimos enviar tu registro. Revisa tu conexión y que cada archivo pese menos de 5 MB.");
+    } finally {
+      setEnviando(false);
     }
-    router.push(`/verificar-correo?email=${encodeURIComponent(String(d.email ?? ""))}`);
   }
 
   const marcarDoc = (campo: string) => (ok: boolean) => {

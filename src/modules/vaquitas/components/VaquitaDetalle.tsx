@@ -19,6 +19,22 @@ const COLORES_TIENDA = [
   "bg-rose-600",
 ] as const;
 
+function esHostLocal(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]" || hostname === "::1";
+}
+
+/** Origen para el QR y WhatsApp: el de la barra del navegador, salvo que sea localhost y haya una URL pública configurada. */
+function origenParaCompartir(): string {
+  const actual = window.location.origin;
+  const configurado = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
+  if (!esHostLocal(window.location.hostname) || !configurado) return actual;
+  try {
+    return esHostLocal(new URL(configurado).hostname) ? actual : configurado;
+  } catch {
+    return actual;
+  }
+}
+
 const fetcher = async (url: string): Promise<VaquitaDetalleDTO> => {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error("No se pudo actualizar la vaquita");
@@ -147,11 +163,14 @@ export function VaquitaDetalle({
     }
   }, [vaquita.faltan, cantidadTexto]);
 
+  // [RF-VAQ-10] El QR debe abrir en el celular del jurado: si quien presenta está en localhost,
+  // usamos NEXT_PUBLIC_APP_URL (la IP de la laptop en la red local).
   const [urlActual, setUrlActual] = useState(`http://localhost:3000/vaquitas/${vaquita.id}`);
+  const [qrApuntaALocal, setQrApuntaALocal] = useState(false);
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setUrlActual(`${window.location.origin}/vaquitas/${vaquita.id}`);
-    }
+    const origen = origenParaCompartir();
+    setUrlActual(`${origen}/vaquitas/${vaquita.id}`);
+    setQrApuntaALocal(esHostLocal(new URL(origen).hostname));
   }, [vaquita.id]);
 
   const ahorroPorPieza = Math.max(0, Math.round((vaquita.precioMenudeo - vaquita.precioMayoreo) * 100) / 100);
@@ -598,6 +617,12 @@ export function VaquitaDetalle({
               Escanea con otro celular para entrar como <strong>Tienda #4</strong> y aportar en vivo
             </p>
             <p className="mt-1 break-all text-xs text-gray-500">{urlActual}</p>
+            {qrApuntaALocal && (
+              <p role="alert" className="mt-2 rounded-lg bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">
+                ⚠️ Este QR apunta a <strong>localhost</strong> y no abrirá en otro celular. Pon la IP de la laptop en{" "}
+                <code>NEXT_PUBLIC_APP_URL</code> y en <code>TRUSTED_ORIGINS</code> (.env) y reinicia el servidor.
+              </p>
+            )}
             <button
               type="button"
               onClick={copiarEnlace}

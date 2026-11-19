@@ -34,6 +34,15 @@ const STOCK_POR_TIENDA: Record<string, Partial<Record<Clave, [number, number]>>>
   "esperanza@lavaquita.local": { aceite: [1, 3], papel: [2, 4], coca: [8, 6] },
 };
 
+// estatus de verificación de las tiendas demo en el seed
+const ESTATUS_SEED: Record<string, "APROBADA" | "PENDIENTE"> = {
+  "lupe@lavaquita.local": "APROBADA",
+  "guero@lavaquita.local": "APROBADA",
+  "esperanza@lavaquita.local": "APROBADA",
+  "tienda4@lavaquita.local": "APROBADA",
+  "sanjuan@lavaquita.local": "PENDIENTE",
+};
+
 // ── Acción ──────────────────────────────────────────────────
 
 export async function reiniciarDemo(): Promise<Resultado> {
@@ -45,10 +54,24 @@ export async function reiniciarDemo(): Promise<Resultado> {
     await tx.canasta.deleteMany();
     await tx.movimiento.deleteMany();
     await tx.inventario.deleteMany();
-    // Limpiar bitácora y rate limits para una demo limpia
-    await tx.auditLog.deleteMany();
+    // Limpiar límites de intentos y bloqueos de los ensayos.
+    // La bitácora (AuditLog) NO se borra: es evidencia de seguridad [RNF-SEC-11 · ISO A.8.15].
     await tx.rateLimit.deleteMany();
     await tx.limiteIntentos.deleteMany();
+    await tx.user.updateMany({ data: { failedLoginAttempts: 0, lockedUntil: null } });
+
+    // Regresar las tiendas demo a su estatus del seed (San Juan pendiente para aprobarla en vivo)
+    for (const [email, estatus] of Object.entries(ESTATUS_SEED)) {
+      await tx.tienda.updateMany({
+        where: { usuario: { email } },
+        data: {
+          estatusVerificacion: estatus,
+          motivoRechazo: null,
+          revisadaEn: estatus === "APROBADA" ? new Date() : null,
+          revisadaPorId: null,
+        },
+      });
+    }
 
     // 2. Buscar productos por nombre y tiendas aprobadas
     const productos = await tx.producto.findMany();

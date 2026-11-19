@@ -37,5 +37,11 @@ describe("Acciones de Admin [RF-VER-06, RN-16]", () => {
       await expect(aprobarTienda("tienda-falsa")).rejects.toThrow();
       await expect(rechazarTienda("tienda-falsa", "Motivo de prueba válido")).rejects.toThrow();
     });
+
+    it("reactivarTienda y suspenderTienda requieren permisos de administrador", async () => {
+      const { reactivarTienda, suspenderTienda } = await import("./actions");
+      await expect(reactivarTienda("tienda-falsa")).rejects.toThrow();
+      await expect(suspenderTienda("tienda-falsa", "Motivo de prueba válido")).rejects.toThrow();
+    });
   });
 });

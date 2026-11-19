@@ -11,7 +11,10 @@ export function middleware(request: NextRequest) {
   const tieneCookie = !!getSessionCookie(request);
 
   if (!esPublica && !tieneCookie) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const login = new URL("/login", request.url);
+    // Recordar a dónde iba (ej. el QR de una vaquita) para regresarlo tras iniciar sesión
+    if (pathname !== "/") login.searchParams.set("siguiente", pathname + request.nextUrl.search);
+    return NextResponse.redirect(login);
   }
   return NextResponse.next();
 }

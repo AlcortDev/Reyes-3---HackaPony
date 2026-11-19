@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import { escaparHtml } from "@/shared/utils";
 
 const transporte = nodemailer.createTransport({
-  host: process.env.SMTP_HOST ?? "localhost",
+  host: process.env.SMTP_HOST ?? "127.0.0.1", // no "localhost": Node puede resolverlo a IPv6 (::1)
   port: Number(process.env.SMTP_PORT ?? 1025),
   secure: false,
 });

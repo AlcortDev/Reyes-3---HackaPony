@@ -26,14 +26,19 @@ export function ResubirDocumentos() {
     }
     setError(null);
     setEnviando(true);
-    const r = await resubirDocumentos(new FormData(form.current!));
-    setEnviando(false);
-    if (!r.ok) {
-      setError(r.error);
-      return;
+    try {
+      const r = await resubirDocumentos(new FormData(form.current!));
+      if (!r.ok) {
+        setError(r.error);
+        return;
+      }
+      toast.success("¡Listo! Mandamos tus documentos a revisión.");
+      router.refresh();
+    } catch {
+      setError("No pudimos enviar tus documentos. Revisa tu conexión e intenta de nuevo.");
+    } finally {
+      setEnviando(false);
     }
-    toast.success("¡Listo! Mandamos tus documentos a revisión.");
-    router.refresh();
   }
 
   return (
