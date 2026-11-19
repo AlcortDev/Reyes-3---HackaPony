@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { registrarMovimiento } from "../actions";
+import { ajustarExistencias, registrarMovimiento } from "../actions";
+import type { Resultado } from "@/shared/types";
 import { nivelStock } from "../logic";
 import type { ItemInventarioDTO } from "../types";
 import { MOVIMIENTO_SIN_CONFIRMAR } from "../mensajes";
@@ -28,17 +29,32 @@ export function useInventario(origen: ItemInventarioDTO[]) {
   });
 
   async function guardar(item: ItemInventarioDTO, tipo: "ENTRADA" | "SALIDA", cantidad: number) {
-    if (enviando.current || aviso?.incierto) return;
     if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 10_000) {
       setAviso({ texto: "Escribe una cantidad entera entre 1 y 10,000.", incierto: false });
       return;
     }
+    await ejecutar(item, () => registrarMovimiento({ inventarioId: item.id, tipo, cantidad }),
+      `${tipo === "ENTRADA" ? "Surtido" : "Salida"} guardado: ${item.nombre}`);
+  }
+
+  /** Conteo físico: deja el stock exactamente en `existencias`. */
+  async function ajustar(item: ItemInventarioDTO, existencias: number) {
+    if (!Number.isInteger(existencias) || existencias < 0 || existencias > 1_000_000) {
+      setAviso({ texto: "Escribe cuántas tienes en total (un número entero).", incierto: false });
+      return;
+    }
+    await ejecutar(item, () => ajustarExistencias({ inventarioId: item.id, existencias }),
+      `Conteo guardado: ${item.nombre} ahora tiene ${existencias}`);
+  }
+
+  async function ejecutar(item: ItemInventarioDTO, llamada: () => Promise<Resultado<{ stock: number }>>, exito: string) {
+    if (enviando.current || aviso?.incierto) return;
     enviando.current = true;
     const instantanea = origenActual.current;
     setPendiente(item.id);
     setAviso(null);
     try {
-      const resultado = await registrarMovimiento({ inventarioId: item.id, tipo, cantidad });
+      const resultado = await llamada();
       if (!resultado.ok) {
         const incierto = resultado.error === MOVIMIENTO_SIN_CONFIRMAR;
         setAviso({ texto: resultado.error, incierto });
@@ -55,7 +71,7 @@ export function useInventario(origen: ItemInventarioDTO[]) {
         // la petición. No sobrescribirla con una respuesta que llegó después.
         router.refresh();
       }
-      toast.success(`${tipo === "ENTRADA" ? "Surtido" : "Salida"} guardado: ${item.nombre}`);
+      toast.success(exito);
     } catch {
       // Una desconexión puede ocurrir después del commit. No ofrecer reintentar
       // a ciegas: primero hay que consultar las existencias reales de nuevo.
@@ -68,5 +84,5 @@ export function useInventario(origen: ItemInventarioDTO[]) {
     }
   }
 
-  return { items, guardar, pendiente, aviso, bloqueado: pendiente !== null || Boolean(aviso?.incierto) };
+  return { items, guardar, ajustar, pendiente, aviso, bloqueado: pendiente !== null || Boolean(aviso?.incierto) };
 }
