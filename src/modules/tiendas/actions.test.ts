@@ -1,6 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { registroSchema } from "./schemas";
 import { registrarTienda } from "./actions";
+
+// Evitar que las pruebas unitarias agoten el rate limit en la BD compartida
+vi.mock("@/shared/security/rate-limit", () => ({
+  limitarIntentos: vi.fn().mockResolvedValue(true),
+}));
 
 describe("Registro de Tiendas [RF-VER-01…04, RNF-SEC-03]", () => {
   describe("registroSchema", () => {
