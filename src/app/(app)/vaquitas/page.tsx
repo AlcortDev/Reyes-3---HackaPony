@@ -1,7 +1,21 @@
-import { listarVaquitas, VaquitasLista } from "@/modules/vaquitas";
+import { listarProductosParaVaquita, listarVaquitas, VaquitasLista } from "@/modules/vaquitas";
 
-export default async function VaquitasPage() {
+export default async function VaquitasPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ productoId?: string }>;
+}) {
   // El layout (app) ya validó la tienda aprobada.
-  const vaquitas = await listarVaquitas();
-  return <VaquitasLista vaquitas={vaquitas} />;
+  const params = searchParams ? await searchParams : undefined;
+  const [vaquitas, productos] = await Promise.all([
+    listarVaquitas(),
+    listarProductosParaVaquita(),
+  ]);
+  return (
+    <VaquitasLista
+      vaquitas={vaquitas}
+      productos={productos}
+      productoInicialId={params?.productoId}
+    />
+  );
 }
