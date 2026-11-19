@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { BannerEstatus, NOMBRE_DOCUMENTO } from "@/modules/tiendas";
-import { Mapa } from "@/shared/components";
+import { IconoVaquita, Mapa } from "@/shared/components";
 import type { EstatusVerificacion } from "@/shared/types";
 import { formatoFechaHora } from "@/shared/utils";
 import type { RevisionDTO, SolicitudDTO } from "../queries";
@@ -58,15 +58,16 @@ export function TablaSolicitudes({ solicitudes, estatus }: { solicitudes: Solici
           <CardContent className="py-10 text-center text-muted-foreground">{VACIO[estatus]}</CardContent>
         </Card>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid gap-3 md:grid-cols-2 lg:gap-4">
           {solicitudes.map((s) => (
             <li key={s.id}>
               <Link
                 href={`/admin/tiendas/${s.id}`}
-                className="flex items-center gap-4 rounded-lg border bg-card p-4 shadow-xs transition-colors hover:border-primary"
+                className="flex h-full items-center gap-4 rounded-2xl border bg-card p-4 shadow-tarjeta transition-colors hover:border-primary"
               >
+                <IconoVaquita className="size-12 shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-lg font-bold">{s.nombre}</p>
+                  <p className="truncate font-display text-xl font-bold">{s.nombre}</p>
                   <p className="truncate text-muted-foreground">
                     {s.encargado} · {s.usuario.email}
                   </p>
