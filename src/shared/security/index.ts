@@ -15,3 +15,5 @@ export { cifrar, descifrar, sha256 } from "./crypto";
 export { validarArchivo, limpiarArchivo, MIME_IMAGEN, MIME_DOCUMENTO, MAX_BYTES, type MimePermitido } from "./uploads";
 export { limitarIntentos } from "./rate-limit";
 export { datosDelRequest } from "./request";
+export { configuracionIpDesdeEnv, resolverIpCliente, type ConfigIp } from "./ip";
+export { errorCredencialesInvalidas, CREDENCIALES_INVALIDAS } from "./auth-errores";

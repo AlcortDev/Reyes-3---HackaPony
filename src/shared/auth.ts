@@ -1,14 +1,17 @@
 // Configuración de Better Auth (servidor). Dueño: Hiram. Ver docs/SRS.md §3.2.1 (RNF-SEC).
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/shared/db";
 import { enviarCorreo } from "@/shared/mail";
 import { hashPassword, verifyPassword } from "@/shared/security/password";
 import { registrarEvento } from "@/shared/security/audit";
 import { estaBloqueada, evaluarIntentoFallido } from "@/shared/security/lockout";
+import { errorCredencialesInvalidas } from "@/shared/security/auth-errores";
+import { configuracionIpDesdeEnv } from "@/shared/security/ip";
 
+const configIp = configuracionIpDesdeEnv();
 const origenesExtra = (process.env.TRUSTED_ORIGINS ?? "")
   .split(",")
   .map((o) => o.trim())
@@ -20,6 +23,15 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   // CSRF: solo se aceptan peticiones de estos orígenes [RNF-SEC-07]. Agrega la IP de la laptop de demo en TRUSTED_ORIGINS.
   trustedOrigins: [process.env.BETTER_AUTH_URL ?? "http://localhost:3000", ...origenesExtra],
+
+  // [RNF-SEC-04] Misma política de IP que datosDelRequest(): por defecto no se
+  // confía en x-forwarded-for, porque el cliente puede falsificarlo [PR-SEC-10].
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: configIp.ipHeaders,
+      trustedProxies: configIp.trustedProxies,
+    },
+  },
 
   emailAndPassword: {
     enabled: true,
@@ -86,9 +98,10 @@ export const auth = betterAuth({
         if (email) {
           const user = await db.user.findUnique({ where: { email } });
           if (user && estaBloqueada(user.lockedUntil, new Date())) {
-            throw new APIError("UNAUTHORIZED", {
-              message: "Cuenta bloqueada por demasiados intentos fallidos. Intenta dentro de 15 minutos.",
-            });
+            // [RNF-SEC-06] Mismo status/code/message que un login con datos
+            // incorrectos: el bloqueo sigue activo pero no revela si el correo
+            // existe. ACCOUNT_LOCKED se registra en el hook after al bloquear.
+            throw errorCredencialesInvalidas();
           }
         }
       }

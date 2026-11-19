@@ -44,6 +44,9 @@ services:
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-}
+      # [RNF-SEC-04] Política de IP del cliente. Por defecto no se confía en headers.
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
       DOCS_ENCRYPTION_KEY: ${DOCS_ENCRYPTION_KEY}
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
