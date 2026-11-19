@@ -87,7 +87,7 @@ Cada quien es **dueño** de una parte: decide, la construye y la explica en la p
 
 | Integrante | Rol | Es dueño de… | Rama |
 | :--- | :--- | :--- | :--- |
-| **Hiram** | 🏗️🔐 **El Arquitecto** (Tech Lead / Backend + Seguridad) | Proyecto base, Docker, BD, Prisma, seed · **Better Auth**, guards de acceso, bloqueo por intentos, recuperación de contraseña, bitácora, cifrado de documentos, correos (Mailpit) · server actions de registro y de admin | `Hiram` |
+| **Hiram** | 🏗️🔐 **El Arquitecto** (Tech Lead / Backend + Seguridad) | Proyecto base, Docker, BD, Prisma, seed · **Better Auth**, guards de acceso, bloqueo por intentos, recuperación de contraseña, bitácora, cifrado de documentos, correos (Mailpit) · server actions de registro y de admin | `hiram` |
 | **Alvaro** | 📦 **El Bodeguero** (Módulo Inventario) | Catálogo, stock, entradas/salidas (`registrarMovimiento`), alertas, predicción "se acaba en X días", alerta → vaquita | `Alvaro` |
 | **Jesús** | 🛒💰 **El de la Vaquita** (Pedido Grupal + Ahorro) | Vaquitas, aportaciones (`aportarAVaquita`), barra en tiempo real, meta cumplida 🎉 · **pantalla de Ahorro** · WhatsApp/QR de la vaquita | `Jesús` |
 | **Sebastían** | 🎨🪪 **El Marchante** (UX/UI + Verificación + Pitch) | Layout, navegación, diseño · **pantallas de login, registro de tienda en 4 pasos, perfil y panel de admin** · aviso de privacidad · diapositivas y guion | `Sebastían` |

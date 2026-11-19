@@ -49,7 +49,7 @@ Tus tareas están marcadas en el código: `grep -rn "TODO(Alvaro)" src` (o tu no
 10. Si cambias un contrato (firma en `index.ts`, `schema.prisma`), **actualiza `docs/SRS.md` en el mismo PR**.
 
 ## Git
-- Trabaja en tu rama (`Alvaro`, `Hiram`, `Jesús`, `Sebastían`), haz `git pull origin develop` al menos cada hora.
+- Trabaja en tu rama (`Alvaro`, `hiram`, `Jesús`, `Sebastían`), haz `git pull origin develop` al menos cada hora.
 - PR a `develop`; otra persona revisa 2 min. Solo Hiram mergea `develop → main`.
 - Commits chicos citando el requisito: `feat(inventario): semáforo de stock [RF-INV-04]`.
 - `.env` nunca se sube.
