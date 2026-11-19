@@ -6,9 +6,6 @@ import { useEffect } from "react";
 import { IconoVaquita } from "./Logo";
 import { PapelPicado } from "./PapelPicado";
 
-/** Va inline en <head>: decide antes del primer pintado. Respaldo: se quita sola a los 3.5 s. */
-export const SCRIPT_SPLASH = `try{if(!sessionStorage.getItem("vaquita-splash")){sessionStorage.setItem("vaquita-splash","1");var d=document.documentElement;d.dataset.splash="si";setTimeout(function(){d.removeAttribute("data-splash")},3500)}}catch(e){}`;
-
 export function Splash() {
   useEffect(() => {
     const html = document.documentElement;

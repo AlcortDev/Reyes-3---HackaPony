@@ -37,7 +37,7 @@ export function Navbar() {
                 <Link
                   href={href}
                   aria-current={esActiva ? "page" : undefined}
-                  className="group -mt-6 flex flex-col items-center gap-1 pb-2 text-sm font-bold"
+                  className="group -mt-6 flex flex-col items-center gap-1 pb-2 text-base font-bold"
                 >
                   <span
                     className={cn(
@@ -47,7 +47,7 @@ export function Navbar() {
                   >
                     <Icono className="size-8" />
                   </span>
-                  <span className={esActiva ? "text-primary" : "text-muted-foreground"}>{texto}</span>
+                  <span className={esActiva ? "text-secondary" : "text-muted-foreground"}>{texto}</span>
                 </Link>
               </li>
             );
@@ -58,11 +58,11 @@ export function Navbar() {
                 href={href}
                 aria-current={esActiva ? "page" : undefined}
                 className={cn(
-                  "flex min-h-16 flex-col items-center justify-center gap-1 text-sm font-semibold transition-colors",
-                  esActiva ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                  "flex min-h-16 flex-col items-center justify-center gap-1 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+                  esActiva ? "text-secondary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <span className={cn("grid h-8 w-14 place-items-center rounded-full transition-colors", esActiva && "bg-secondary")}>
+                <span className={cn("grid h-8 w-14 place-items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-ring", esActiva && "bg-surface-highlight")}>
                   <Icono className="size-6" />
                 </span>
                 {texto}
@@ -89,8 +89,8 @@ export function NavLateral() {
                 href={href}
                 aria-current={esActiva ? "page" : undefined}
                 className={cn(
-                  "flex min-h-12 items-center gap-3 rounded-xl px-4 text-lg font-semibold transition-colors",
-                  esActiva ? "bg-[#fbf8f1] text-primary shadow-sm" : "text-white/85 hover:bg-white/10 hover:text-white",
+                  "flex min-h-12 items-center gap-3 rounded-xl px-4 text-lg font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+                  esActiva ? "bg-background text-secondary shadow-sm" : "text-white/85 hover:bg-white/10 hover:text-white",
                 )}
               >
                 <Icono className="size-6" />

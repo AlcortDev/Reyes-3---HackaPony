@@ -136,7 +136,7 @@ export function RevisionTienda({ tienda }: { tienda: RevisionDTO }) {
               href={`https://www.openstreetmap.org/?mlat=${tienda.lat}&mlon=${tienda.lng}#map=19/${tienda.lat}/${tienda.lng}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-primary underline underline-offset-4"
+              className="inline-flex items-center gap-1 text-sm text-link underline underline-offset-4"
             >
               Ver en OpenStreetMap <ExternalLink className="size-4" aria-hidden />
             </a>
@@ -162,7 +162,7 @@ export function RevisionTienda({ tienda }: { tienda: RevisionDTO }) {
                       // eslint-disable-next-line @next/next/no-img-element -- documento privado servido por /api/documentos (no-store)
                       <img src={`/api/documentos/${d.id}`} alt={NOMBRE_DOCUMENTO[d.tipo]} className="aspect-[4/3] w-full object-cover" />
                     ) : (
-                      <span className="flex aspect-[4/3] flex-col items-center justify-center gap-2 text-primary">
+                      <span className="flex aspect-[4/3] flex-col items-center justify-center gap-2 text-secondary">
                         <FileText className="size-12" aria-hidden />
                         Abrir PDF
                       </span>

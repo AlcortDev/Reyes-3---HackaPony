@@ -8,13 +8,14 @@ import { BotonSalir } from "@/modules/auth";
 import { Logo } from "@/shared/components";
 import type { EstatusVerificacion, TipoDocumento } from "@/shared/types";
 import type { MiTiendaDTO } from "../queries";
+import { EstructuraTienda } from "./EstructuraTienda";
 import { ResubirDocumentos } from "./ResubirDocumentos";
 
 const ESTATUS: Record<EstatusVerificacion, { titulo: string; texto: string; clase: string; Icono: typeof Clock }> = {
   PENDIENTE: {
     titulo: "Tu tienda está en revisión",
     texto: "Estamos revisando tus documentos. Te avisamos por correo en cuanto la aprobemos.",
-    clase: "border-accent bg-accent/40 text-accent-foreground",
+    clase: "border-accent/30 bg-info-surface text-accent-strong",
     Icono: Clock,
   },
   APROBADA: {
@@ -74,12 +75,16 @@ function Dato({ Icono, etiqueta, valor }: { Icono: typeof User; etiqueta: string
 }
 
 export function PerfilTienda({ tienda }: { tienda: MiTiendaDTO | null }) {
-  return (
-    <div className="space-y-5">
-      <header className="flex items-center justify-between">
-        <Logo />
-        <BotonSalir />
-      </header>
+  const contenido = (
+    <div className="mx-auto w-full max-w-md space-y-5">
+      {tienda?.estatusVerificacion === "APROBADA" ? (
+        <h1 className="text-3xl font-extrabold tracking-tight text-secondary">Mi cuenta</h1>
+      ) : (
+        <header className="flex items-center justify-between">
+          <Logo />
+          <BotonSalir />
+        </header>
+      )}
 
       {!tienda ? (
         <Card>
@@ -133,7 +138,7 @@ export function PerfilTienda({ tienda }: { tienda: MiTiendaDTO | null }) {
                         rel="noreferrer"
                         className="flex min-h-11 items-center gap-3 rounded-md px-2 hover:bg-muted"
                       >
-                        <FileText className="size-5 text-primary" aria-hidden />
+                        <FileText className="size-5 text-secondary" aria-hidden />
                         <span className="underline underline-offset-4">{NOMBRE_DOCUMENTO[d.tipo]}</span>
                       </a>
                     </li>
@@ -148,4 +153,9 @@ export function PerfilTienda({ tienda }: { tienda: MiTiendaDTO | null }) {
       )}
     </div>
   );
+
+  if (tienda?.estatusVerificacion === "APROBADA") {
+    return <EstructuraTienda nombre={tienda.nombre}>{contenido}</EstructuraTienda>;
+  }
+  return <main className="mx-auto max-w-md p-4 pb-10">{contenido}</main>;
 }

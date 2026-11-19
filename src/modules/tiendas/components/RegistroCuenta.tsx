@@ -83,7 +83,7 @@ export function RegistroCuenta() {
             {enviando ? "Creando tu cuenta…" : "Crear mi cuenta"}
           </Button>
           <p className="text-center">
-            <Link href="/login" className="text-primary underline underline-offset-4">
+            <Link href="/login" className="text-link underline underline-offset-4">
               Ya tengo cuenta
             </Link>
           </p>

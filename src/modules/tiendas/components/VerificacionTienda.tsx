@@ -247,8 +247,8 @@ export function VerificacionTienda({ nombre }: { nombre: string }) {
               onValidez={marcarDoc(CAMPOS_DOCUMENTO.IDENTIFICACION)}
             />
 
-            <div className="flex items-start gap-3 rounded-lg border bg-secondary/50 p-4">
-              <ShieldCheck className="mt-0.5 size-6 shrink-0 text-primary" aria-hidden />
+            <div className="flex items-start gap-3 rounded-lg border bg-surface-highlight p-4">
+              <ShieldCheck className="mt-0.5 size-6 shrink-0 text-secondary" aria-hidden />
               <p className="text-sm">
                 Tus documentos se guardan <strong>cifrados</strong>, solo los ve el administrador para confirmar que tu tienda existe, y nunca
                 se comparten con otras tiendas.
@@ -259,7 +259,7 @@ export function VerificacionTienda({ nombre }: { nombre: string }) {
               <input type="checkbox" name="aceptaPrivacidad" className="mt-1 size-6 shrink-0 accent-[var(--primary)]" aria-invalid={!!errores.aceptaPrivacidad} />
               <span className="text-base">
                 Leí y acepto el{" "}
-                <Link href="/privacidad" target="_blank" className="text-primary underline underline-offset-4">
+                <Link href="/privacidad" target="_blank" className="text-link underline underline-offset-4">
                   aviso de privacidad
                 </Link>
                 .

@@ -506,7 +506,7 @@ export function VaquitaDetalle({
                 value={cantidadTexto}
                 onChange={(e) => setCantidadTexto(e.target.value)}
                 onBlur={() => fijarCantidad(cantidad)}
-                className="min-h-12 w-full rounded-xl border border-gray-300 bg-white text-center text-2xl font-extrabold text-gray-900"
+                className="min-h-12 w-full rounded-xl border border-gray-300 bg-white text-center text-2xl font-extrabold text-gray-900 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
             <button
