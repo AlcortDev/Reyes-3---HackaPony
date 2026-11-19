@@ -216,6 +216,13 @@ export async function recibirPedidoVaquita(input: {
 
   const resultado = await db.$transaction(
     async (tx): Promise<Resultado<{ unidadesRecibidas: number; nuevoStock: number }>> => {
+      // Bloquear la fila de la canasta primero para serializar clics rápidos / peticiones concurrentes
+      const filas = await tx.$queryRaw<
+        Array<{ id: string; productoId: string; metaUnidades: number; cierraEn: Date; estado: EstadoCanasta }>
+      >`SELECT "id", "productoId", "metaUnidades", "cierraEn", "estado" FROM "Canasta" WHERE "id" = ${canastaId} FOR UPDATE`;
+      const canasta = filas[0];
+      if (!canasta) return fallo("Vaquita no encontrada");
+
       const yaRecibido = await tx.auditLog.findFirst({
         where: {
           evento: "VAQUITA_PEDIDO_RECIBIDO",
@@ -228,19 +235,18 @@ export async function recibirPedidoVaquita(input: {
         return fallo("Tu tienda ya recibió las unidades de esta vaquita en su inventario");
       }
 
-      const canasta = await tx.canasta.findUnique({
-        where: { id: canastaId },
-        include: { aportaciones: true },
+      const aportaciones = await tx.aportacion.findMany({
+        where: { canastaId },
+        select: { tiendaId: true, cantidad: true },
       });
-      if (!canasta) return fallo("Vaquita no encontrada");
 
-      const totalCanasta = canasta.aportaciones.reduce((acc, a) => acc + a.cantidad, 0);
-      const estado = estadoEfectivo(canasta.estado, canasta.cierraEn, totalCanasta, canasta.metaUnidades);
+      const totalCanasta = aportaciones.reduce((acc, a) => acc + a.cantidad, 0);
+      const estado = estadoEfectivo(canasta.estado, new Date(canasta.cierraEn), totalCanasta, canasta.metaUnidades);
       if (estado !== "COMPLETA") {
         return fallo("Solo puedes recibir el pedido cuando la vaquita está completa");
       }
 
-      const unidadesTienda = canasta.aportaciones
+      const unidadesTienda = aportaciones
         .filter((a) => a.tiendaId === tiendaId)
         .reduce((acc, a) => acc + a.cantidad, 0);
 

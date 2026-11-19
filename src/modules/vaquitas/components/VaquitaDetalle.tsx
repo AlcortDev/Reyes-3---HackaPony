@@ -154,6 +154,8 @@ export function VaquitaDetalle({
   const [mostrarQr, setMostrarQr] = useState(true);
   const [copiado, setCopiado] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const aportandoRef = useRef(false);
+  const recibiendoRef = useRef(false);
 
   // Ajustar cantidad si por polling baja el número de faltantes
   useEffect(() => {
@@ -190,6 +192,7 @@ export function VaquitaDetalle({
   }, [vaquita, urlActual]);
 
   const handleAportar = (cantidadAportar: number) => {
+    if (aportandoRef.current) return;
     setMensajeError(null);
     setMensajeExito(null);
 
@@ -198,38 +201,49 @@ export function VaquitaDetalle({
       return;
     }
 
+    aportandoRef.current = true;
     startTransition(async () => {
-      const res = await aportarAVaquita({
-        canastaId: vaquita.id,
-        cantidad: cantidadAportar,
-      });
+      try {
+        const res = await aportarAVaquita({
+          canastaId: vaquita.id,
+          cantidad: cantidadAportar,
+        });
 
-      if (!res.ok) {
-        setMensajeError(res.error);
+        if (!res.ok) {
+          setMensajeError(res.error);
+          await mutate();
+          return;
+        }
+
+        if (res.data.estado === "COMPLETA") {
+          setMostrarConfeti(true);
+          setMensajeExito("🎉 ¡Meta completada! Desbloqueaste el precio de mayoreo para toda la colonia.");
+        } else {
+          setMensajeExito(`✅ ¡Le entraste con ${cantidadAportar} ${vaquita.unidad ?? "unidades"}!`);
+        }
         await mutate();
-        return;
+      } finally {
+        aportandoRef.current = false;
       }
-
-      if (res.data.estado === "COMPLETA") {
-        setMostrarConfeti(true);
-        setMensajeExito("🎉 ¡Meta completada! Desbloqueaste el precio de mayoreo para toda la colonia.");
-      } else {
-        setMensajeExito(`✅ ¡Le entraste con ${cantidadAportar} ${vaquita.unidad ?? "unidades"}!`);
-      }
-      await mutate();
     });
   };
 
   const handleRecibirPedido = () => {
+    if (recibiendoRef.current || yaRecibido) return;
+    recibiendoRef.current = true;
     setMensajeError(null);
     startTransition(async () => {
-      const res = await recibirPedidoVaquita({ canastaId: vaquita.id });
-      if (!res.ok) {
-        setMensajeError(res.error);
-        return;
+      try {
+        const res = await recibirPedidoVaquita({ canastaId: vaquita.id });
+        if (!res.ok) {
+          setMensajeError(res.error);
+          return;
+        }
+        setYaRecibido(true);
+        setPedidoRecibido({ unidades: res.data.unidadesRecibidas, stock: res.data.nuevoStock });
+      } finally {
+        recibiendoRef.current = false;
       }
-      setYaRecibido(true);
-      setPedidoRecibido({ unidades: res.data.unidadesRecibidas, stock: res.data.nuevoStock });
     });
   };
 
