@@ -6,7 +6,7 @@ export default async function PerfilPage() {
   await requireSession();
   const tienda = await getMiTienda();
   return (
-    <main className="mx-auto max-w-md p-4">
+    <main className="mx-auto max-w-md p-4 pb-10">
       <PerfilTienda tienda={tienda} />
     </main>
   );
