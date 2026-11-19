@@ -10,5 +10,5 @@ export {
 export { getMiTienda, getTiendaActual, type MiTiendaDTO } from "./queries";
 export { registrarTienda, resubirDocumentos } from "./actions";
 export { PerfilTienda, BannerEstatus, NOMBRE_DOCUMENTO } from "./components/Perfil";
-export { HeaderTienda } from "./components/HeaderTienda";
+export { HeaderTienda, MenuLateral } from "./components/HeaderTienda";
 export { RegistroWizard } from "./components/RegistroWizard";

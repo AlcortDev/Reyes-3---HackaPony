@@ -380,7 +380,7 @@ export function VaquitasLista({
           aria-selected={filtro === "TODAS"}
           onClick={() => setFiltro("TODAS")}
           className={`min-h-11 rounded-xl px-3 py-2 text-sm font-semibold transition ${
-            filtro === "TODAS" ? "bg-gray-900 text-white shadow-xs" : "bg-white text-gray-700 border border-gray-200"
+            filtro === "TODAS" ? "bg-primary-oscuro text-white shadow-xs" : "bg-white text-gray-700 border border-gray-200"
           }`}
         >
           Todas ({vaquitas.length})
@@ -419,7 +419,7 @@ export function VaquitasLista({
           </p>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
           {vaquitasFiltradas.map((v) => {
             const ahorroUnit = Math.max(0, v.precioMenudeo - v.precioMayoreo);
             const ahorroTotalMeta = ahorroUnit * v.metaUnidades;
