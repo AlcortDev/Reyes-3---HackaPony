@@ -10,7 +10,7 @@ describe("cifrar / descifrar [RNF-SEC-09]", () => {
   it("ida y vuelta devuelve el mismo contenido", () => {
     const original = Buffer.from("INE de prueba");
     const c = cifrar(original);
-    expect(Buffer.from(c.contenido).equals(original)).toBe(false);
+    expect(c.contenido.equals(original)).toBe(false);
     expect(descifrar(c).equals(original)).toBe(true);
     expect(sha256(descifrar(c))).toBe(sha256(original));
   });

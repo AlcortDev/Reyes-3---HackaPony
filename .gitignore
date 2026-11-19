@@ -18,9 +18,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Vercel / TypeScript / OS
+# Vercel / TypeScript / OS / IDE
 .vercel
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
 *.pem
+.atl/

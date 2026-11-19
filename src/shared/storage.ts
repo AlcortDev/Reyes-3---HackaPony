@@ -18,9 +18,9 @@ export async function guardarDocumento(
       mimeType: input.mime,
       tamano: input.buffer.length,
       sha256: sha256(input.buffer),
-      iv,
-      authTag,
-      contenido,
+      iv: new Uint8Array(iv),
+      authTag: new Uint8Array(authTag),
+      contenido: new Uint8Array(contenido),
     },
     select: { id: true },
   });
