@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     container_name: hackapony-postgres
     restart: unless-stopped
     environment:
@@ -20,7 +20,7 @@ services:
   # Buzón de correo local: verificación, recuperación de contraseña y avisos.
   # Web: http://localhost:8025 · SMTP: localhost:1025
   mailpit:
-    image: axllent/mailpit:latest
+    image: docker.io/axllent/mailpit:latest
     container_name: hackapony-mailpit
     restart: unless-stopped
     ports:

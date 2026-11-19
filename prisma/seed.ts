@@ -213,9 +213,9 @@ async function main() {
         mimeType: "image/jpeg",
         tamano: buffer.length,
         sha256: sha256(buffer),
-        iv,
-        authTag,
-        contenido,
+        iv: new Uint8Array(iv),
+        authTag: new Uint8Array(authTag),
+        contenido: new Uint8Array(contenido),
       },
     });
   }
