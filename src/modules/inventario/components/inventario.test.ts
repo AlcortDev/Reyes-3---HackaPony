@@ -11,6 +11,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 import { InventarioLista } from "./InventarioLista";
 import { DetalleInventarioContenido } from "./DetalleInventarioContenido";
+import { ListaCompacta } from "./ListaCompacta";
 
 describe("interfaz de inventario [RF-INV-01…05, RNF-01…05]", () => {
   it("ofrece vender y surtir una unidad con nombres accesibles por producto", () => {
@@ -87,5 +88,29 @@ describe("interfaz de inventario [RF-INV-01…05, RNF-01…05]", () => {
     expect(html).toContain("~2 días");
     expect(html).toContain('href="/vaquitas/vaq-1"');
     expect(html).toContain("$3.50");
+  });
+});
+
+describe("vista lista del inventario", () => {
+  const props = { items: INVENTARIO_MOCK, bloqueado: false, pendiente: null, guardar: vi.fn() };
+
+  it("muestra una fila por producto con semáforo en texto, existencias y − / +", () => {
+    const html = renderToStaticMarkup(createElement(ListaCompacta, props));
+    expect(html.match(/<li[ >]/g)?.length).toBe(INVENTARIO_MOCK.length);
+    expect(html).toContain("Urge surtir");
+    expect(html).toContain('aria-label="Vender una unidad de Coca-Cola 600 ml"');
+    expect(html).toContain('aria-label="Surtir una unidad de Coca-Cola 600 ml"');
+    expect(html).toContain('href="/inventario/inv-1"');
+  });
+
+  it("no deja vender si no hay existencias", () => {
+    const html = renderToStaticMarkup(createElement(ListaCompacta, { ...props, items: [{ ...INVENTARIO_MOCK[0], stock: 0 }] }));
+    expect(html).toMatch(/aria-label="Vender una unidad de [^"]+" disabled/);
+  });
+
+  it("la pantalla ofrece cambiar entre tarjetas y lista", () => {
+    const html = renderToStaticMarkup(createElement(InventarioLista, { catalogo: [], items: INVENTARIO_MOCK }));
+    expect(html).toContain("Tarjetas");
+    expect(html).toContain("Lista");
   });
 });
