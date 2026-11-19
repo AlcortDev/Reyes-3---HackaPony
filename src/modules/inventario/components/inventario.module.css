@@ -126,3 +126,30 @@
 .opcion small, .opcionElegida small { color: var(--inv-muted); font-size: 15px; }
 .textoSuave { color: var(--inv-muted); }
 .ofrecerAlta { display: flex; flex-direction: column; gap: 8px; }
+
+/* ── Vista lista (Sebastían) ── */
+.barraVista { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.barraVista > span { color: var(--inv-muted); }
+.selectorVista { display: inline-grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--inv-suave); border-radius: 12px; }
+.selectorVista button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 0; border-radius: 10px; background: transparent; color: var(--inv-muted); font-weight: 600; }
+.selectorVista button[aria-pressed="true"] { background: white; color: var(--inv-texto); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+.listaCompacta { list-style: none; margin: 0; padding: 0; background: white; border: 1px solid var(--inv-borde); border-radius: 16px; box-shadow: var(--sombra-tarjeta); overflow: hidden; }
+.fila { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; border-left: 5px solid transparent; min-width: 0; }
+.fila + .fila { border-top: 1px solid var(--inv-borde); }
+.fila_critico { border-left-color: #c8402f; background: #fff8f6; }
+.fila_bajo { border-left-color: #d99a1b; }
+.fila_ok { border-left-color: #7cb66a; }
+.filaNombre { display: flex; flex-direction: column; min-width: 0; flex: 1; min-height: 44px; justify-content: center; color: inherit; }
+.filaNombre strong { font-weight: 650; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; }
+.filaNombre .estado { margin-top: 0; font-size: 15px; }
+.filaMinimo { color: var(--inv-muted); }
+.filaControles { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.filaBoton { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--inv-borde); border-radius: 12px; background: white; color: var(--inv-secundario); }
+.filaBoton:disabled { cursor: not-allowed; }
+.filaStock { display: flex; flex-direction: column; align-items: center; min-width: 48px; font-size: 22px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.filaStock small { font-size: 13px; font-weight: 400; color: var(--inv-muted); }
+.filaDetalle { display: grid; place-items: center; width: 32px; height: 44px; color: var(--inv-muted); }
+.girando { animation: girar 1s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (max-width: 380px) { .filaMinimo { display: none; } }
+@media (prefers-reduced-motion: reduce) { .girando { animation: none; } }
