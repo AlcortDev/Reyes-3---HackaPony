@@ -31,6 +31,15 @@ npm run dev             # http://localhost:3000
 #    Desde celulares en la misma red: npm run dev:red y agrega http://<IP>:3000 en TRUSTED_ORIGINS
 ```
 
+**¿Sin Docker en Windows?** Instala PostgreSQL y Mailpit directo (mismos puertos que `docker-compose`):
+
+```powershell
+winget install --id PostgreSQL.PostgreSQL.16 -e --override "--mode unattended --unattendedmodeui none --superpassword postgres --serverport 5432 --disable-components stackbuilder,pgAdmin"
+& "C:\Program Files\PostgreSQL\16\bin\psql.exe" -U postgres -h localhost -c "CREATE DATABASE lavaquita;"   # contraseña: postgres
+winget install --id axllent.mailpit -e
+mailpit                 # déjalo corriendo en otra terminal → http://localhost:8025
+```
+
 📘 Documentación: [`docs/SRS.md`](docs/SRS.md) (requisitos y contratos) · [`docs/plan.md`](docs/plan.md) (roles y cronograma) · [`AGENTS.md`](AGENTS.md) (reglas para el código y los agentes de IA).
 
 ---
