@@ -102,3 +102,8 @@
   .tarjeta { display: flex; flex-direction: column; height: 100%; }
   .tarjeta .verDetalle { margin-top: auto; }
 }
+
+/* "Otra cantidad": vista previa y corrección de conteo */
+.previa { color: var(--inv-muted); font-size: 15px; }
+.previa strong { color: var(--inv-texto); font-variant-numeric: tabular-nums; }
+.botonConteo { width: 100%; gap: 8px; }

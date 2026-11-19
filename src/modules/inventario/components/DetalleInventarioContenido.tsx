@@ -38,7 +38,7 @@ export function DetalleInventarioContenido({ detalle, vaquita, consultaFallida }
       )}
       <div className={estilos.tarjeta}>
         <ProductoEncabezado item={item} />
-        <ControlesStock item={item} bloqueado={estado.bloqueado} pendiente={estado.pendiente === item.id} guardar={estado.guardar} />
+        <ControlesStock item={item} bloqueado={estado.bloqueado} pendiente={estado.pendiente === item.id} guardar={estado.guardar} ajustar={estado.ajustar} />
         <p className={estilos.prediccion}>
           <Clock3 aria-hidden="true" size={19} />
           {detalle.diasParaAgotarse === null ? "Sin datos suficientes para estimar cuándo se acaba."

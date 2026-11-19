@@ -59,7 +59,7 @@ export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
         {visibles.map((item) => (
           <li key={item.id} className={estilos.tarjeta}>
             <ProductoEncabezado item={item} />
-            <ControlesStock item={item} bloqueado={estado.bloqueado || lectorAbierto} pendiente={estado.pendiente === item.id} guardar={estado.guardar} />
+            <ControlesStock item={item} bloqueado={estado.bloqueado || lectorAbierto} pendiente={estado.pendiente === item.id} guardar={estado.guardar} ajustar={estado.ajustar} />
             <Link href={`/inventario/${item.id}`} className={estilos.verDetalle}>
               Ver detalle y opciones para surtir <ArrowRight aria-hidden="true" size={18} />
             </Link>

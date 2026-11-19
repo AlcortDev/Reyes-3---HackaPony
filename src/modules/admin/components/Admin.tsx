@@ -34,7 +34,7 @@ export function TablaSolicitudes({ solicitudes, estatus }: { solicitudes: Solici
         <p className="text-muted-foreground">Revisa que cada tienda exista antes de darle acceso.</p>
       </div>
 
-      <nav aria-label="Filtrar por estatus" className="flex gap-2 overflow-x-auto pb-1">
+      <nav aria-label="Filtrar por estatus" className="flex flex-wrap gap-2">
         {PESTANAS.map((p) => {
           const activa = p.estatus === estatus;
           return (
@@ -58,9 +58,12 @@ export function TablaSolicitudes({ solicitudes, estatus }: { solicitudes: Solici
           <CardContent className="py-10 text-center text-muted-foreground">{VACIO[estatus]}</CardContent>
         </Card>
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2 lg:gap-4">
+        <ul
+          // grid-cols-1 = minmax(0,1fr): sin él, un correo largo ensanchaba la columna más que la pantalla
+          className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:gap-4"
+        >
           {solicitudes.map((s) => (
-            <li key={s.id}>
+            <li key={s.id} className="min-w-0">
               <Link
                 href={`/admin/tiendas/${s.id}`}
                 className="flex h-full items-center gap-4 rounded-2xl border bg-card p-4 shadow-tarjeta transition-colors hover:border-primary"
