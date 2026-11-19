@@ -118,7 +118,8 @@ Cada quien es **dueño** de una parte: decide, la construye y la explica en la p
 - [ ] Acordar el **modelo de datos** (abajo) — es el contrato entre todos, nadie lo cambia sin avisar.
 - [ ] Acordar los **contratos entre módulos** (ver *Arquitectura modular*) y que cada dueño cree su carpeta `src/modules/<módulo>/` con su `index.ts`.
 - [ ] Auth ya decidido: **Better Auth + verificación de tiendas** (ver [Login y verificación](#-login-y-verificación-de-tiendas)). Hiram y Sebastían acuerdan los esquemas Zod del login y del registro.
-- [ ] Hiram crea el proyecto y lo sube a `develop` **lo antes posible (meta: 1:00)**; mientras tanto los demás avanzan con datos mock. Luego todos hacen `git pull` y crean su rama de trabajo.
+- [x] **El esqueleto del proyecto ya está en `main`, `develop` y en la rama de cada quien**: Next.js, Prisma con el schema completo, seed, Better Auth, guards de seguridad y la carpeta de cada módulo con sus contratos, datos mock y `TODO(<nombre>)`. Cada quien hace `git pull` en su rama, sigue el README y busca sus tareas con `grep -rn "TODO(<tu nombre>)" src`.
+- [ ] Hiram (primeros 15 min): `npm install`, `npm run db:migrate` con nombre `init` y **sube la carpeta `prisma/migrations`** para que todos usen la misma migración. Sebastían: `npx shadcn@latest add button input label card form sonner badge dialog textarea tabs progress` y lo sube.
 - [ ] Definir las 3 tiendas, ~10 productos y las cuentas demo del seed (ver *Datos simulados*).
 
 ---

@@ -7,21 +7,31 @@
 
 ## 🚀 Quick Path (Inicio Rápido)
 
+Requisitos: **Node.js 22 LTS** y **Docker Desktop**.
+
 ```bash
 # 1. Instalar dependencias
 npm install
 
-# 2. Configurar entorno (.env con conexión a PostgreSQL)
+# 2. Configurar entorno y llenar los valores vacíos
 cp .env.example .env
+#    BETTER_AUTH_SECRET y DOCS_ENCRYPTION_KEY:  openssl rand -base64 32
+#    ADMIN_PASSWORD y SEED_DEMO_PASSWORD: mínimo 12 caracteres
 
-# 3. Preparar base de datos y datos de prueba
-npx prisma migrate dev
-npx prisma db seed
+# 3. Levantar PostgreSQL + Mailpit (buzón de correos local)
+npm run db:up
 
-# 4. Iniciar servidor de desarrollo
-npm run dev
-# Abrir http://localhost:3000 en el navegador
+# 4. Preparar base de datos y datos de prueba
+npm run db:migrate      # la primera vez pide un nombre: "init"
+npm run db:seed
+
+# 5. Iniciar servidor de desarrollo
+npm run dev             # http://localhost:3000
+#    Correos (verificación, recuperación): http://localhost:8025
+#    Desde celulares en la misma red: npm run dev:red y agrega http://<IP>:3000 en TRUSTED_ORIGINS
 ```
+
+📘 Documentación: [`docs/SRS.md`](docs/SRS.md) (requisitos y contratos) · [`docs/plan.md`](docs/plan.md) (roles y cronograma) · [`AGENTS.md`](AGENTS.md) (reglas para el código y los agentes de IA).
 
 ---
 
@@ -44,7 +54,7 @@ npm run dev
 | **UI & Estilos** | Tailwind CSS + shadcn/ui | Sistema de diseño ágil, accesible y adaptado para dispositivos móviles/desktop. |
 | **Base de Datos** | PostgreSQL | Almacenamiento relacional para tiendas, inventarios y compras grupales. |
 | **ORM** | Prisma | Esquema declarativo, migraciones automáticas y consultas type-safe. |
-| **Autenticación** | Better Auth | Gestión de sesiones e identidad para los comerciantes. |
+| **Autenticación** | Better Auth | Login seguro (Argon2id, rate limit, bloqueo, recuperación) alineado a OWASP e ISO/IEC 27001, con verificación de tiendas por un admin. |
 
 ---
 

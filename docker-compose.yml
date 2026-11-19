@@ -17,6 +17,16 @@ services:
       timeout: 5s
       retries: 5
 
+  # Buzón de correo local: verificación, recuperación de contraseña y avisos.
+  # Web: http://localhost:8025 · SMTP: localhost:1025
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: hackapony-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   app:
     build:
       context: .
@@ -29,9 +39,14 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-lavaquita}?schema=public
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-hackapony-2026-reyes-3-super-secret-key}
+      # Sin valor por defecto a propósito [RNF-SEC-13]: deben venir de .env
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-}
+      DOCS_ENCRYPTION_KEY: ${DOCS_ENCRYPTION_KEY}
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
       WATCHPACK_POLLING: "true"
     volumes:
       - .:/app
@@ -40,6 +55,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
 volumes:
   postgres_data:

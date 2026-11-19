@@ -1,0 +1,251 @@
+// Contrato de datos de La Vaquita — ver docs/SRS.md §5.
+// Dueño: Hiram. Nadie lo cambia sin avisar en el chat; si cambia, se actualiza el SRS en el mismo PR.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Better Auth (equivalente a `npx @better-auth/cli generate`)
+// + campos propios en User [RNF-SEC-05, RNF-SEC-10]
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id                  String    @id
+  name                String
+  email               String    @unique
+  emailVerified       Boolean   @default(false)
+  image               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  // Propios (user.additionalFields con input: false)
+  role                Rol       @default(TENDERO)
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  sessions Session[]
+  accounts Account[]
+  tienda   Tienda?
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?   // hash Argon2id [RNF-SEC-01]
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+// Almacenamiento del rate limit de Better Auth (storage: "database") [RNF-SEC-04]
+model RateLimit {
+  id          String  @id
+  key         String? @unique
+  count       Int?
+  lastRequest BigInt?
+
+  @@map("rateLimit")
+}
+
+// Límite propio para server actions (registro, re-subida de documentos)
+model LimiteIntentos {
+  clave     String   @id
+  intentos  Int      @default(0)
+  ventanaIn DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// Tiendas y verificación [RF-VER]
+// ─────────────────────────────────────────────────────────────
+
+model Tienda {
+  id                  String              @id @default(cuid())
+  usuarioId           String              @unique
+  nombre              String
+  encargado           String
+  telefono            String
+  direccion           String
+  lat                 Float
+  lng                 Float
+  estatusVerificacion EstatusVerificacion @default(PENDIENTE)
+  motivoRechazo       String?
+  enviadaEn           DateTime            @default(now())
+  revisadaEn          DateTime?
+  revisadaPorId       String?
+  usuario             User                @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  documentos          DocumentoTienda[]
+  inventario          Inventario[]
+  aportaciones        Aportacion[]
+
+  @@index([estatusVerificacion])
+}
+
+model DocumentoTienda {
+  id        String        @id @default(cuid())
+  tiendaId  String
+  tipo      TipoDocumento
+  mimeType  String
+  tamano    Int
+  sha256    String
+  iv        Bytes
+  authTag   Bytes
+  contenido Bytes // cifrado AES-256-GCM; consultar SIEMPRE con select para no cargarlo en listados
+  creadoEn  DateTime      @default(now())
+  tienda    Tienda        @relation(fields: [tiendaId], references: [id], onDelete: Cascade)
+
+  @@index([tiendaId, tipo])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  evento    String
+  userId    String?
+  objetivo  String?
+  ip        String?
+  userAgent String?
+  exito     Boolean
+  detalle   Json?
+  creadoEn  DateTime @default(now())
+
+  @@index([userId, creadoEn])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Inventario y vaquitas [RF-INV, RF-VAQ]
+// ─────────────────────────────────────────────────────────────
+
+model Producto {
+  id            String       @id @default(cuid())
+  nombre        String
+  categoria     String
+  unidad        String
+  precioMenudeo Float
+  codigoBarras  String?      @unique
+  imagen        String?
+  inventarios   Inventario[]
+  canastas      Canasta[]
+}
+
+model Inventario {
+  id          String       @id @default(cuid())
+  tiendaId    String
+  productoId  String
+  stock       Int
+  stockMinimo Int
+  tienda      Tienda       @relation(fields: [tiendaId], references: [id], onDelete: Cascade)
+  producto    Producto     @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  movimientos Movimiento[]
+
+  @@unique([tiendaId, productoId])
+}
+
+model Movimiento {
+  id           String     @id @default(cuid())
+  inventarioId String
+  tipo         TipoMov
+  cantidad     Int
+  fecha        DateTime   @default(now())
+  inventario   Inventario @relation(fields: [inventarioId], references: [id], onDelete: Cascade)
+
+  @@index([inventarioId, fecha])
+}
+
+model Canasta {
+  id            String        @id @default(cuid())
+  productoId    String
+  proveedor     String
+  metaUnidades  Int
+  precioMayoreo Float
+  cierraEn      DateTime
+  estado        EstadoCanasta @default(ABIERTA)
+  creadaEn      DateTime      @default(now())
+  producto      Producto      @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  aportaciones  Aportacion[]
+
+  @@index([productoId, estado])
+}
+
+model Aportacion {
+  id        String   @id @default(cuid())
+  canastaId String
+  tiendaId  String
+  cantidad  Int
+  fecha     DateTime @default(now())
+  canasta   Canasta  @relation(fields: [canastaId], references: [id], onDelete: Cascade)
+  tienda    Tienda   @relation(fields: [tiendaId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────
+
+enum Rol {
+  TENDERO
+  ADMIN
+}
+
+enum EstatusVerificacion {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+  SUSPENDIDA
+}
+
+enum TipoDocumento {
+  FACHADA
+  COMPROBANTE_DOMICILIO
+  IDENTIFICACION
+}
+
+enum TipoMov {
+  ENTRADA
+  SALIDA
+}
+
+enum EstadoCanasta {
+  ABIERTA
+  COMPLETA
+  CERRADA
+}
