@@ -1,13 +1,26 @@
 "use client";
-// [RF-AUT-01] Formulario de inicio de sesión. Funcional; el diseño final es de Sebastían.
+// [RF-AUT-01] Inicio de sesión. Diseño: Sebastían · servidor: Better Auth (Hiram).
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { authClient } from "@/shared/auth-client";
 import { loginSchema } from "../schemas";
+import { Aviso } from "./Aviso";
+import { CampoContrasena } from "./CampoContrasena";
+
+const AVISOS_URL: Record<string, string> = {
+  verificado: "¡Listo! Tu correo quedó confirmado. Ya puedes entrar.",
+  restablecida: "Tu contraseña cambió. Entra con la nueva.",
+};
 
 export function LoginForm() {
   const router = useRouter();
+  const params = useSearchParams();
+  const aviso = AVISOS_URL[params.get("aviso") ?? ""];
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
@@ -27,38 +40,52 @@ export function LoginForm() {
 
     if (error) {
       // Mensajes genéricos: no revelan si el correo existe [RNF-SEC-06]
-      if (error.status === 403) setError("Confirma tu correo primero. Revisa tu bandeja de entrada.");
-      else if (error.status === 429) setError("Demasiados intentos. Espera unos minutos.");
-      else setError("Correo o contraseña incorrectos");
+      if (error.status === 403 && /verif/i.test(error.message ?? "")) {
+        setError("Confirma tu correo primero. Revisa tu bandeja de entrada.");
+      } else if (error.status === 429 || error.status === 423 || error.status === 403) {
+        setError("Demasiados intentos. Espera unos minutos y vuelve a intentar.");
+      } else {
+        setError("Correo o contraseña incorrectos");
+      }
       return;
     }
-    router.replace("/"); // la página raíz redirige según rol y estatus
+    router.replace("/"); // la raíz redirige según rol y estatus
     router.refresh();
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
-      <h1 className="text-2xl font-bold">Entrar a La Vaquita 🐄</h1>
-      <label className="block">
-        <span className="text-base">Correo</span>
-        <input name="email" type="email" autoComplete="email" required className="mt-1 w-full rounded-md border p-3 text-base" />
-      </label>
-      <label className="block">
-        <span className="text-base">Contraseña</span>
-        <input name="password" type="password" autoComplete="current-password" required className="mt-1 w-full rounded-md border p-3 text-base" />
-      </label>
-      {error && (
-        <p role="alert" className="rounded-md bg-red-50 p-3 text-red-700">
-          {error}
-        </p>
-      )}
-      <button type="submit" disabled={cargando} className="min-h-12 w-full rounded-md bg-green-700 font-semibold text-white disabled:opacity-60">
-        {cargando ? "Entrando…" : "Entrar"}
-      </button>
-      <div className="flex justify-between text-sm">
-        <Link href="/recuperar" className="underline">¿Olvidaste tu contraseña?</Link>
-        <Link href="/registro" className="underline">Registrar mi tienda</Link>
-      </div>
-    </form>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-2xl">¡Qué gusto verte!</CardTitle>
+        <CardDescription className="text-base">Entra para ver tu inventario y tus vaquitas.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={onSubmit} className="space-y-5" noValidate>
+          {aviso && <Aviso tipo="exito">{aviso}</Aviso>}
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-base">
+              Correo
+            </Label>
+            <Input id="email" name="email" type="email" inputMode="email" autoComplete="email" required maxLength={254} />
+          </div>
+          <CampoContrasena id="password" name="password" etiqueta="Contraseña" autoComplete="current-password" />
+          {error && <Aviso tipo="error">{error}</Aviso>}
+          <Button type="submit" size="lg" className="w-full" disabled={cargando}>
+            {cargando ? "Entrando…" : "Entrar"}
+          </Button>
+          <p className="text-center">
+            <Link href="/recuperar" className="text-primary underline underline-offset-4">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </p>
+        </form>
+        <div className="mt-6 border-t pt-6 text-center">
+          <p className="text-muted-foreground">¿Tu tienda todavía no está en La Vaquita?</p>
+          <Button asChild variant="outline" className="mt-3 w-full">
+            <Link href="/registro">Registrar mi tienda</Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
