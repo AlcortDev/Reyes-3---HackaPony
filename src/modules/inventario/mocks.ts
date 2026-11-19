@@ -1,4 +1,4 @@
-// Datos falsos para avanzar la UI mientras se conecta Prisma. Bórralos cuando queries.ts use la BD.
+// Fixtures exclusivas de las pruebas de UI. Las consultas de la aplicación usan Prisma.
 import type { ItemInventarioDTO } from "./types";
 
 export const INVENTARIO_MOCK: ItemInventarioDTO[] = [

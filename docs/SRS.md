@@ -930,7 +930,7 @@ export { TablaSolicitudes, RevisionTienda } from "./components";
 export type NivelStock = "ok" | "bajo" | "critico"; // 🟢 | 🟡 | 🔴
 
 export function getInventarioPorTienda(tiendaId: string): Promise<ItemInventarioDTO[]>;
-export function getDetalleInventario(inventarioId: string): Promise<DetalleInventarioDTO | null>;
+export function getDetalleInventario(inventarioId: string, tiendaId: string): Promise<DetalleInventarioDTO | null>; // tiendaId de la sesión
 export function getProductosBajoStock(tiendaId: string): Promise<ItemInventarioDTO[]>;
 export function registrarMovimiento(input: {
   inventarioId: string;
@@ -941,6 +941,10 @@ export function registrarMovimiento(input: {
 // logic.ts (puras)
 export function nivelStock(stock: number, stockMinimo: number): NivelStock;          // RN-01
 export function diasParaAgotarse(stock: number, salidasUltimos7Dias: number): number | null; // RN-07
+
+// Componentes públicos: las páginas solo consultan y renderizan.
+export function InventarioLista(props: { items: ItemInventarioDTO[] }): React.JSX.Element;
+export function InventarioDetalle(props: { detalle: DetalleInventarioDTO }): Promise<React.JSX.Element>;
 ```
 
 #### `@/modules/vaquitas`
