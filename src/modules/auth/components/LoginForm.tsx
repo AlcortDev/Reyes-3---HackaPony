@@ -85,7 +85,7 @@ export function LoginForm() {
         <div className="mt-6 border-t pt-6 text-center">
           <p className="text-muted-foreground">¿Tu tienda todavía no está en La Vaquita?</p>
           <Button asChild variant="outline" className="mt-3 w-full">
-            <Link href="/registro">Registrar mi tienda</Link>
+            <Link href="/registro">Crear cuenta para mi tienda</Link>
           </Button>
         </div>
       </CardContent>

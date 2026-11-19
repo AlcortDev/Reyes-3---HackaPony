@@ -1,8 +1,9 @@
 "use client";
-// [RF-INV-01…05, RNF-01…06] Inventario móvil, con movimientos confirmados.
+// [RF-INV-01…05, RF-INV-11, RNF-01…06] Inventario móvil, con movimientos confirmados.
+// Diseño: Alvaro (shadcn) · Agregar producto y vista lista: Sebastían.
 import Link from "next/link";
-import { useId, useState } from "react";
-import { AlertTriangle, ArrowRight, PackageOpen, Search } from "lucide-react";
+import { useEffect, useId, useState } from "react";
+import { AlertTriangle, ArrowRight, LayoutGrid, List, PackageOpen, Search } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -12,18 +13,33 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import type { ItemInventarioDTO } from "../types";
+import type { ItemInventarioDTO, ProductoParaAgregarDTO } from "../types";
+import { AgregarProducto } from "./AgregarProducto";
 import { ControlesStock } from "./ControlesStock";
+import { ListaCompacta } from "./ListaCompacta";
 import { ProductoEncabezado } from "./ProductoEncabezado";
 import { useInventario } from "./useInventario";
 import { LectorCodigo } from "./LectorCodigo";
 
-export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
+type Vista = "tarjetas" | "lista";
+const CLAVE_VISTA = "inventario-vista";
+
+export function InventarioLista({ items, catalogo }: { items: ItemInventarioDTO[]; catalogo: ProductoParaAgregarDTO[] }) {
   const estado = useInventario(items);
   const [busqueda, setBusqueda] = useState("");
   const [soloPorSurtir, setSoloPorSurtir] = useState(false);
   const [lectorAbierto, setLectorAbierto] = useState(false);
+  const [alta, setAlta] = useState<{ codigo?: string } | null>(null);
+  const [vista, setVista] = useState<Vista>("tarjetas");
   const filtroId = useId();
+  // Se lee después de montar (no en el render) para no chocar con el HTML del servidor
+  useEffect(() => {
+    try { if (localStorage.getItem(CLAVE_VISTA) === "lista") setVista("lista"); } catch { /* sin almacenamiento */ }
+  }, []);
+  const cambiarVista = (v: Vista) => {
+    setVista(v);
+    try { localStorage.setItem(CLAVE_VISTA, v); } catch { /* sin almacenamiento */ }
+  };
   const normalizar = (texto: string) => texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("es-MX");
   const texto = normalizar(busqueda.trim());
   const prioridad = { critico: 0, bajo: 1, ok: 2 };
@@ -55,10 +71,16 @@ export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
             <FieldLabel htmlFor={filtroId} className="min-h-11 cursor-pointer">Por surtir</FieldLabel>
           </Field>
           <div className={cn(lectorAbierto ? "col-span-2 w-full lg:col-span-3" : "justify-self-end")}>
-            <LectorCodigo bloqueado={estado.bloqueado} onAbiertoChange={setLectorAbierto} />
+            <LectorCodigo bloqueado={estado.bloqueado} onAbiertoChange={setLectorAbierto}
+              onNoEncontrado={(codigo) => setAlta({ codigo })} />
           </div>
         </div>
       )}
+      {/* [RF-INV-11] Debajo de "Buscar por código"; también con el inventario vacío */}
+      <div className={cn(alta ? "w-full" : "self-end")}>
+        <AgregarProducto catalogo={catalogo} abierto={alta !== null} codigoInicial={alta?.codigo}
+          onAbrir={() => setAlta({})} onCerrar={() => setAlta(null)} />
+      </div>
       {estado.aviso && (
         <Alert variant="destructive">
           <AlertTriangle aria-hidden="true" />
@@ -68,32 +90,50 @@ export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
           </AlertDescription>}
         </Alert>
       )}
-      <ul className="grid gap-4 lg:grid-cols-2 lg:items-start" aria-label="Productos de tu tienda">
-        {visibles.map((item) => (
-          <li key={item.id} className="h-full">
-            <Card className="h-full">
-              <CardHeader><ProductoEncabezado item={item} /></CardHeader>
-              <CardContent>
-                <ControlesStock item={item} bloqueado={estado.bloqueado || lectorAbierto} pendiente={estado.pendiente === item.id} guardar={estado.guardar} ajustar={estado.ajustar} />
-              </CardContent>
-              <CardFooter className="mt-auto flex-col items-stretch gap-2">
-                <Separator />
-                <Button asChild variant="link" className="h-auto min-h-12 justify-between px-0 whitespace-normal text-left">
-                  <Link href={`/inventario/${item.id}`}>
-                    Ver detalle y opciones para surtir <ArrowRight aria-hidden="true" data-icon="inline-end" />
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          </li>
-        ))}
-      </ul>
-      {visibles.length === 0 && (
+      {items.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-muted-foreground">{visibles.length} de {items.length} productos</span>
+          <div role="group" aria-label="Cómo ver tu inventario" className="inline-grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+            {([["tarjetas", "Tarjetas", LayoutGrid], ["lista", "Lista", List]] as const).map(([valor, etiqueta, Icono]) => (
+              <Button key={valor} type="button" size="sm" variant="ghost" aria-pressed={vista === valor}
+                onClick={() => cambiarVista(valor)}
+                className={cn("min-h-11 rounded-lg px-4", vista === valor ? "bg-card text-foreground shadow-sm hover:bg-card" : "text-muted-foreground")}>
+                <Icono aria-hidden="true" data-icon="inline-start" /> {etiqueta}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+      {vista === "lista" && visibles.length > 0 ? (
+        <ListaCompacta items={visibles} bloqueado={estado.bloqueado || lectorAbierto} pendiente={estado.pendiente} guardar={estado.guardar} />
+      ) : (
+        <ul className="grid gap-4 lg:grid-cols-2 lg:items-start" aria-label="Productos de tu tienda">
+          {visibles.map((item) => (
+            <li key={item.id} className="h-full">
+              <Card className="h-full">
+                <CardHeader><ProductoEncabezado item={item} /></CardHeader>
+                <CardContent>
+                  <ControlesStock item={item} bloqueado={estado.bloqueado || lectorAbierto} pendiente={estado.pendiente === item.id} guardar={estado.guardar} ajustar={estado.ajustar} />
+                </CardContent>
+                <CardFooter className="mt-auto flex-col items-stretch gap-2">
+                  <Separator />
+                  <Button asChild variant="link" className="h-auto min-h-12 justify-between px-0 whitespace-normal text-left">
+                    <Link href={`/inventario/${item.id}`}>
+                      Ver detalle y opciones para surtir <ArrowRight aria-hidden="true" data-icon="inline-end" />
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
+      {visibles.length === 0 && !(items.length === 0 && alta) && (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon"><PackageOpen aria-hidden="true" /></EmptyMedia>
             <EmptyTitle>{items.length === 0 ? "Todavía no hay productos en tu inventario" : "No encontramos productos con ese filtro"}</EmptyTitle>
-            <EmptyDescription>{items.length === 0 ? "Aquí aparecerán los productos asignados a tu tienda." : "Prueba otro nombre o revisa todos tus productos."}</EmptyDescription>
+            <EmptyDescription>{items.length === 0 ? "Toca «Agregar producto» para empezar con lo que vendes." : "Prueba otro nombre o revisa todos tus productos."}</EmptyDescription>
           </EmptyHeader>
           {items.length > 0 && <EmptyContent><Button type="button" variant="outline"
             onClick={() => { setBusqueda(""); setSoloPorSurtir(false); }}>Ver todos los productos</Button></EmptyContent>}

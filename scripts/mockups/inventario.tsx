@@ -25,7 +25,7 @@ function Mockup() {
           <HeaderTienda nombre="Tienda de ejemplo" />
           <main className="mx-auto w-full max-w-md px-4 pt-5 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:max-w-5xl lg:px-10 lg:pt-10 lg:pb-12">
         {producto ? <DetalleInventarioContenido detalle={{ ...producto, movimientos: [], diasParaAgotarse: 2 }} vaquita={null} />
-          : ruta === "/inventario" ? <InventarioLista items={INVENTARIO_MOCK} />
+          : ruta === "/inventario" ? <InventarioLista items={INVENTARIO_MOCK} catalogo={[]} />
             : <div className="flex flex-col gap-4"><h1 className="text-2xl font-bold">Vista de diseño de inventario</h1>
               <p>Las otras pantallas se revisan en la aplicación. Este mockup no se conecta a la base de datos.</p>
               <Button onClick={() => { window.location.hash = "/inventario"; }}>Volver al inventario</Button>

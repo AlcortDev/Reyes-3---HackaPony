@@ -157,6 +157,7 @@ export async function listarProductosParaVaquita(): Promise<ProductoCatalogoDTO[
     categoria: p.categoria,
     unidad: p.unidad,
     precioMenudeo: p.precioMenudeo,
+    precioMayoreo: p.precioMayoreo,
     tieneVaquitaAbierta: idsAbiertos.has(p.id),
   }));
 }

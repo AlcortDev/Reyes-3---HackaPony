@@ -131,18 +131,14 @@ export function VaquitasLista({
 
   const [proveedor, setProveedor] = useState("Central de Abastos Morelia");
   const [metaUnidades, setMetaUnidades] = useState("50");
-  const [precioMayoreo, setPrecioMayoreo] = useState(
-    productoSeleccionado ? String(Math.max(1, Math.round(productoSeleccionado.precioMenudeo * 0.8 * 10) / 10)) : "15",
-  );
+  // El precio de mayoreo NO lo escribe el tendero: viene del catálogo (lo define el admin).
+  const precioMayoreo = productoSeleccionado?.precioMayoreo ?? null;
   const [horasCierre, setHorasCierre] = useState("48");
   const [errorCrear, setErrorCrear] = useState<string | null>(null);
 
   const cambiarProducto = (nuevoId: string) => {
     setProductoId(nuevoId);
-    const prod = productos.find((p) => p.id === nuevoId);
-    if (prod) {
-      setPrecioMayoreo(String(Math.max(1, Math.round(prod.precioMenudeo * 0.8 * 10) / 10)));
-    }
+    setErrorCrear(null);
   };
 
   const abrirCrearConProducto = (idProd: string) => {
@@ -154,7 +150,6 @@ export function VaquitasLista({
     e.preventDefault();
     setErrorCrear(null);
     const meta = Number.parseInt(metaUnidades, 10);
-    const mayoreo = Number.parseFloat(precioMayoreo);
     const horas = Number.parseInt(horasCierre, 10);
 
     if (!productoId) {
@@ -165,8 +160,8 @@ export function VaquitasLista({
       setErrorCrear("La meta debe ser de al menos 2 unidades");
       return;
     }
-    if (!Number.isFinite(mayoreo) || mayoreo <= 0) {
-      setErrorCrear("Escribe un precio de mayoreo válido");
+    if (precioMayoreo == null) {
+      setErrorCrear("Este producto todavía no tiene precio de mayoreo. Pídeselo al administrador.");
       return;
     }
 
@@ -177,7 +172,6 @@ export function VaquitasLista({
         productoId,
         proveedor,
         metaUnidades: meta,
-        precioMayoreo: mayoreo,
         cierraEn,
       });
       if (!res.ok) {
@@ -315,51 +309,44 @@ export function VaquitasLista({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="vaq-meta" className="block text-base font-bold text-secondary">
-                  Meta ({productoSeleccionado?.unidad ?? "unidades"})
-                </label>
-                <input
-                  id="vaq-meta"
-                  type="number"
-                  inputMode="numeric"
-                  min={2}
-                  max={100000}
-                  required
-                  value={metaUnidades}
-                  onChange={(e) => setMetaUnidades(e.target.value)}
-                  className="mt-1 min-h-11 w-full rounded-lg border-0 bg-card px-3 text-base font-bold text-primary-oscuro [appearance:textfield] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="vaq-precio" className="block text-base font-bold text-secondary">
-                  Precio mayoreo ($ MXN)
-                </label>
-                <input
-                  id="vaq-precio"
-                  type="number"
-                  inputMode="decimal"
-                  step="0.5"
-                  min="0.5"
-                  required
-                  value={precioMayoreo}
-                  onChange={(e) => setPrecioMayoreo(e.target.value)}
-                  className="mt-1 min-h-11 w-full rounded-lg border-0 bg-card px-3 text-base font-bold text-primary-oscuro [appearance:textfield] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                />
-              </div>
+            <div>
+              <label htmlFor="vaq-meta" className="block text-base font-bold text-secondary">
+                Meta ({productoSeleccionado?.unidad ?? "unidades"})
+              </label>
+              <input
+                id="vaq-meta"
+                type="number"
+                inputMode="numeric"
+                min={2}
+                max={100000}
+                required
+                value={metaUnidades}
+                onChange={(e) => setMetaUnidades(e.target.value)}
+                className="mt-1 min-h-11 w-full rounded-lg border-0 bg-card px-3 text-base font-bold text-primary-oscuro [appearance:textfield] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
             </div>
 
-            {productoSeleccionado && (
-              <p className="rounded-lg bg-white/90 px-3 py-2 text-sm text-gray-700">
-                Precio menudeo: <strong>{formatoMoneda(productoSeleccionado.precioMenudeo)}</strong> · Ahorro por{" "}
-                {productoSeleccionado.unidad}:{" "}
-                <strong className="text-green-700">
-                  {formatoMoneda(Math.max(0, productoSeleccionado.precioMenudeo - Number(precioMayoreo || 0)))}
-                </strong>
-              </p>
-            )}
+            {/* [RN-11] Precio de mayoreo: solo lectura, viene del catálogo del administrador */}
+            {productoSeleccionado &&
+              (precioMayoreo != null ? (
+                <div className="rounded-lg bg-card px-3 py-2 text-base">
+                  <p>
+                    Precio de mayoreo: <strong className="text-lg text-secondary">{formatoMoneda(precioMayoreo)}</strong>{" "}
+                    <span className="text-muted-foreground">(lo pone el proveedor)</span>
+                  </p>
+                  <p className="text-muted-foreground">
+                    Menudeo: <span className="line-through">{formatoMoneda(productoSeleccionado.precioMenudeo)}</span> · Ahorras{" "}
+                    <strong className="text-secondary">
+                      {formatoMoneda(Math.max(0, productoSeleccionado.precioMenudeo - precioMayoreo))}
+                    </strong>{" "}
+                    por {productoSeleccionado.unidad}
+                  </p>
+                </div>
+              ) : (
+                <p role="status" className="rounded-lg bg-warning-surface px-3 py-2 text-base font-semibold text-warning">
+                  ⚠️ {productoSeleccionado.nombre} todavía no tiene precio de mayoreo. Pídeselo al administrador.
+                </p>
+              ))}
 
             <div>
               <label htmlFor="vaq-cierre" className="block text-base font-bold text-secondary">
@@ -387,7 +374,7 @@ export function VaquitasLista({
 
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || precioMayoreo == null}
               className="min-h-12 w-full rounded-xl bg-green-700 px-4 py-3 text-base font-bold text-white shadow-sm enabled:hover:bg-green-800 disabled:opacity-50"
             >
               {isPending ? "Publicando vaquita…" : "🐄 Publicar vaquita en la colonia"}

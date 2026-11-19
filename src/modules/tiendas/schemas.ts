@@ -21,12 +21,13 @@ export const pasoUbicacionSchema = z.object({
   lng: z.coerce.number().min(-118).max(-86),
 });
 
-export const registroSchema = pasoCuentaSchema
-  .merge(pasoTiendaSchema)
-  .merge(pasoUbicacionSchema)
-  .extend({
-    aceptaPrivacidad: z.literal("on", { errorMap: () => ({ message: "Acepta el aviso de privacidad" }) }),
-  });
+/** Paso 1 · /registro: solo la cuenta. */
+export const cuentaSchema = pasoCuentaSchema;
+
+/** Paso 2 · /verificar-tienda (con sesión): tienda + ubicación + aviso de privacidad (los archivos van aparte). */
+export const verificacionSchema = pasoTiendaSchema.merge(pasoUbicacionSchema).extend({
+  aceptaPrivacidad: z.literal("on", { errorMap: () => ({ message: "Acepta el aviso de privacidad" }) }),
+});
 
 /** Nombres de los campos de archivo en el FormData del registro. */
 export const CAMPOS_DOCUMENTO = {
