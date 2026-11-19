@@ -1,6 +1,6 @@
 // Lecturas del inventario. Dueño: Alvaro.
 // Quien llama ya validó la sesión (requireTiendaAprobada) y pasa el tiendaId DE LA SESIÓN.
-import type { DetalleInventarioDTO, ItemInventarioDTO } from "./types";
+import type { DetalleInventarioDTO, ItemInventarioDTO, ProductoParaAgregarDTO } from "./types";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/shared/db";
 import { diasParaAgotarse, nivelStock } from "./logic";
@@ -69,4 +69,13 @@ export async function getDetalleInventario(inventarioId: string, tiendaId: strin
 export async function getProductosBajoStock(tiendaId: string): Promise<ItemInventarioDTO[]> {
   const items = await getInventarioPorTienda(tiendaId);
   return items.filter((i) => i.nivel === "critico");
+}
+
+/** [RF-INV-11] Productos del catálogo que la tienda todavía NO tiene en su inventario. */
+export async function getProductosParaAgregar(tiendaId: string): Promise<ProductoParaAgregarDTO[]> {
+  return db.producto.findMany({
+    where: { inventarios: { none: { tiendaId } } },
+    select: { id: true, nombre: true, categoria: true, unidad: true, precioMenudeo: true, codigoBarras: true },
+    orderBy: { nombre: "asc" },
+  });
 }

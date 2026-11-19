@@ -30,3 +30,13 @@ export async function getTiendaParaRevision(tiendaId: string) {
 
 export type SolicitudDTO = Awaited<ReturnType<typeof listarTiendasPorEstatus>>[number];
 export type RevisionDTO = NonNullable<Awaited<ReturnType<typeof getTiendaParaRevision>>>;
+
+/** Catálogo con precios, para que el admin fije el precio de mayoreo [RN-11]. */
+export async function listarCatalogo() {
+  return db.producto.findMany({
+    select: { id: true, nombre: true, categoria: true, unidad: true, precioMenudeo: true, precioMayoreo: true, codigoBarras: true },
+    orderBy: [{ precioMayoreo: { sort: "asc", nulls: "first" } }, { nombre: "asc" }],
+  });
+}
+
+export type ProductoCatalogoAdminDTO = Awaited<ReturnType<typeof listarCatalogo>>[number];

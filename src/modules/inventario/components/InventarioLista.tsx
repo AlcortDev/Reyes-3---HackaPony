@@ -3,18 +3,20 @@
 import Link from "next/link";
 import { useState } from "react";
 import { AlertTriangle, ArrowRight, PackageOpen, Search } from "lucide-react";
-import type { ItemInventarioDTO } from "../types";
+import type { ItemInventarioDTO, ProductoParaAgregarDTO } from "../types";
+import { AgregarProducto } from "./AgregarProducto";
 import { ControlesStock } from "./ControlesStock";
 import { ProductoEncabezado } from "./ProductoEncabezado";
 import { useInventario } from "./useInventario";
 import { LectorCodigo } from "./LectorCodigo";
 import estilos from "./inventario.module.css";
 
-export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
+export function InventarioLista({ items, catalogo }: { items: ItemInventarioDTO[]; catalogo: ProductoParaAgregarDTO[] }) {
   const estado = useInventario(items);
   const [busqueda, setBusqueda] = useState("");
   const [soloPorSurtir, setSoloPorSurtir] = useState(false);
   const [lectorAbierto, setLectorAbierto] = useState(false);
+  const [alta, setAlta] = useState<{ codigo?: string } | null>(null);
   const normalizar = (texto: string) => texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("es-MX");
   const texto = normalizar(busqueda.trim());
   const prioridad = { critico: 0, bajo: 1, ok: 2 };
@@ -47,7 +49,11 @@ export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
           </label>
         </div>
       )}
-      {items.length > 0 && <LectorCodigo bloqueado={estado.bloqueado} onAbiertoChange={setLectorAbierto} />}
+      {items.length > 0 && <LectorCodigo bloqueado={estado.bloqueado} onAbiertoChange={setLectorAbierto}
+        onNoEncontrado={(codigo) => setAlta({ codigo })} />}
+      {/* [RF-INV-11] Debajo de "Buscar por código"; también con el inventario vacío */}
+      <AgregarProducto catalogo={catalogo} abierto={alta !== null} codigoInicial={alta?.codigo}
+        onAbrir={() => setAlta({})} onCerrar={() => setAlta(null)} />
       {estado.aviso && (
         <div className={estilos.avisoError} role="alert">
           <p>{estado.aviso.texto}</p>
@@ -66,11 +72,11 @@ export function InventarioLista({ items }: { items: ItemInventarioDTO[] }) {
           </li>
         ))}
       </ul>
-      {visibles.length === 0 && (
+      {visibles.length === 0 && !(items.length === 0 && alta) && (
         <div className={estilos.vacio}>
           <PackageOpen aria-hidden="true" size={30} />
           <h2>{items.length === 0 ? "Todavía no hay productos en tu inventario" : "No encontramos productos con ese filtro"}</h2>
-          <p>{items.length === 0 ? "Aquí aparecerán los productos asignados a tu tienda." : "Prueba otro nombre o revisa todos tus productos."}</p>
+          <p>{items.length === 0 ? "Toca «Agregar producto» para empezar con lo que vendes." : "Prueba otro nombre o revisa todos tus productos."}</p>
           {items.length > 0 && <button type="button" className={estilos.botonSecundario}
             onClick={() => { setBusqueda(""); setSoloPorSurtir(false); }}>Ver todos los productos</button>}
         </div>

@@ -14,7 +14,7 @@ import { DetalleInventarioContenido } from "./DetalleInventarioContenido";
 
 describe("interfaz de inventario [RF-INV-01…05, RNF-01…05]", () => {
   it("ofrece vender y surtir una unidad con nombres accesibles por producto", () => {
-    const html = renderToStaticMarkup(createElement(InventarioLista, { items: INVENTARIO_MOCK }));
+    const html = renderToStaticMarkup(createElement(InventarioLista, { catalogo: [], items: INVENTARIO_MOCK }));
     expect(html).toContain('aria-label="Vender una unidad de Coca-Cola 600 ml"');
     expect(html).toContain('aria-label="Surtir una unidad de Coca-Cola 600 ml"');
     expect(html).toContain('href="/inventario/inv-1"');
@@ -23,14 +23,15 @@ describe("interfaz de inventario [RF-INV-01…05, RNF-01…05]", () => {
   });
 
   it("muestra un estado vacío útil sin productos o controles ficticios", () => {
-    const html = renderToStaticMarkup(createElement(InventarioLista, { items: [] }));
+    const html = renderToStaticMarkup(createElement(InventarioLista, { catalogo: [], items: [] }));
     expect(html).toContain("Todavía no hay productos en tu inventario");
     expect(html).not.toContain("Coca-Cola");
     expect(html).not.toContain("Vender una unidad");
+    expect(html).toContain("Agregar producto"); // [RF-INV-11] se puede empezar desde cero
   });
 
   it("comunica niveles con texto, unidades y un contador de productos críticos", () => {
-    const html = renderToStaticMarkup(createElement(InventarioLista, { items: INVENTARIO_MOCK }));
+    const html = renderToStaticMarkup(createElement(InventarioLista, { catalogo: [], items: INVENTARIO_MOCK }));
     expect(html).toContain("Urge surtir");
     expect(html).toContain("Pendiente");
     expect(html).toContain("Bien surtido");
@@ -40,7 +41,7 @@ describe("interfaz de inventario [RF-INV-01…05, RNF-01…05]", () => {
   });
 
   it("explica por qué no se puede vender cuando no hay existencias", () => {
-    const html = renderToStaticMarkup(createElement(InventarioLista, { items: [{ ...INVENTARIO_MOCK[0], stock: 0 }] }));
+    const html = renderToStaticMarkup(createElement(InventarioLista, { catalogo: [], items: [{ ...INVENTARIO_MOCK[0], stock: 0 }] }));
     expect(html).toContain("No hay unidades para sacar");
   });
 

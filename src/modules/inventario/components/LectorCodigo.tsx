@@ -9,12 +9,18 @@ import { capturaVigente, detenerStream } from "../camara";
 import estilos from "./inventario.module.css";
 
 /** [RF-INV-10] Leer nunca registra una venta: abre el producto para elegir la acción. */
-export function LectorCodigo({ bloqueado, onAbiertoChange }: { bloqueado: boolean; onAbiertoChange: (abierto: boolean) => void }) {
+export function LectorCodigo({ bloqueado, onAbiertoChange, onNoEncontrado }: {
+  bloqueado: boolean;
+  onAbiertoChange: (abierto: boolean) => void;
+  /** [RF-INV-11] El código no está en el inventario: ofrecer agregarlo. */
+  onNoEncontrado?: (codigo: string) => void;
+}) {
   const [abierto, setAbierto] = useState(false);
   const [apertura, setApertura] = useState(0);
   const [codigo, setCodigo] = useState("");
   const [fase, setFase] = useState<"listo" | "iniciando" | "camara" | "buscando" | "deteniendo">("listo");
   const [error, setError] = useState<string | null>(null);
+  const [noEncontrado, setNoEncontrado] = useState<string | null>(null);
   const lector = useRef<Html5Qrcode | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
@@ -46,13 +52,13 @@ export function LectorCodigo({ bloqueado, onAbiertoChange }: { bloqueado: boolea
     if (ocupado.current || bloqueado) return;
     ocupado.current = true;
     const intento = generacion.current;
-    setFase("buscando"); setError(null);
+    setFase("buscando"); setError(null); setNoEncontrado(null);
     try {
       detener();
       const resultado = await buscarInventarioPorCodigo(valor);
       if (intento !== generacion.current) return;
       if (resultado.ok) router.push(`/inventario/${encodeURIComponent(resultado.data.inventarioId)}`);
-      else setError(resultado.error);
+      else { setError(resultado.error); setNoEncontrado(valor.trim()); }
     } catch {
       if (intento === generacion.current) setError("No pudimos buscar el producto. Intenta de nuevo.");
     } finally {
@@ -121,7 +127,7 @@ export function LectorCodigo({ bloqueado, onAbiertoChange }: { bloqueado: boolea
   function cerrar() {
     generacion.current++;
     detener();
-    ocupado.current = false; setFase("listo"); setError(null); setAbierto(false); onAbiertoChange(false);
+    ocupado.current = false; setFase("listo"); setError(null); setNoEncontrado(null); setAbierto(false); onAbiertoChange(false);
   }
 
   if (!abierto) return <button type="button" className={estilos.botonSecundario} disabled={bloqueado}
@@ -154,6 +160,12 @@ export function LectorCodigo({ bloqueado, onAbiertoChange }: { bloqueado: boolea
           <Camera aria-hidden="true" size={20} />{fase === "iniciando" ? "Abriendo cámara…" : "Usar cámara"}
         </button>}
       {error && <p role="alert" className={estilos.critico}>{error}</p>}
+      {noEncontrado && onNoEncontrado && fase === "listo" && (
+        <button type="button" className={estilos.botonPrimario}
+          onClick={() => { const c = noEncontrado; cerrar(); onNoEncontrado(c); }}>
+          Agregarlo a mi inventario
+        </button>
+      )}
     </section>
   );
 }
