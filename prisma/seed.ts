@@ -23,16 +23,16 @@ const haceDias = (d: number) => new Date(Date.now() - d * DIA);
 const CENTRO = { lat: 19.7009, lng: -101.1804 };
 
 const PRODUCTOS = [
-  { clave: "coca", nombre: "Coca-Cola 600 ml", categoria: "Bebidas", unidad: "pieza", precioMenudeo: 18 },
-  { clave: "sabritas", nombre: "Sabritas 45 g", categoria: "Botanas", unidad: "pieza", precioMenudeo: 19 },
-  { clave: "bimbo", nombre: "Pan Bimbo grande", categoria: "Panadería", unidad: "pieza", precioMenudeo: 52 },
-  { clave: "huevo", nombre: "Huevo (kg)", categoria: "Abarrotes", unidad: "kg", precioMenudeo: 48 },
-  { clave: "aceite", nombre: "Aceite 1 L", categoria: "Abarrotes", unidad: "botella", precioMenudeo: 45 },
-  { clave: "frijol", nombre: "Frijol 1 kg", categoria: "Abarrotes", unidad: "bolsa", precioMenudeo: 38 },
-  { clave: "arroz", nombre: "Arroz 1 kg", categoria: "Abarrotes", unidad: "bolsa", precioMenudeo: 32 },
-  { clave: "maseca", nombre: "Maseca 1 kg", categoria: "Abarrotes", unidad: "bolsa", precioMenudeo: 24 },
-  { clave: "leche", nombre: "Leche 1 L", categoria: "Lácteos", unidad: "pieza", precioMenudeo: 29 },
-  { clave: "papel", nombre: "Papel higiénico 4 pzas", categoria: "Limpieza", unidad: "paquete", precioMenudeo: 36 },
+  { clave: "coca", nombre: "Coca-Cola 600 ml", categoria: "Bebidas", unidad: "pieza", precioMenudeo: 18, precioMayoreo: 14.5 },
+  { clave: "sabritas", nombre: "Sabritas 45 g", categoria: "Botanas", unidad: "pieza", precioMenudeo: 19, precioMayoreo: 15.5 },
+  { clave: "bimbo", nombre: "Pan Bimbo grande", categoria: "Panadería", unidad: "pieza", precioMenudeo: 52, precioMayoreo: 43 },
+  { clave: "huevo", nombre: "Huevo (kg)", categoria: "Abarrotes", unidad: "kg", precioMenudeo: 48, precioMayoreo: 38.5 },
+  { clave: "aceite", nombre: "Aceite 1 L", categoria: "Abarrotes", unidad: "botella", precioMenudeo: 45, precioMayoreo: 37 },
+  { clave: "frijol", nombre: "Frijol 1 kg", categoria: "Abarrotes", unidad: "bolsa", precioMenudeo: 38, precioMayoreo: 31 },
+  { clave: "arroz", nombre: "Arroz 1 kg", categoria: "Abarrotes", unidad: "bolsa", precioMenudeo: 32, precioMayoreo: 26 },
+  { clave: "maseca", nombre: "Maseca 1 kg", categoria: "Abarrotes", unidad: "bolsa", precioMenudeo: 24, precioMayoreo: 19 },
+  { clave: "leche", nombre: "Leche 1 L", categoria: "Lácteos", unidad: "pieza", precioMenudeo: 29, precioMayoreo: 24 },
+  { clave: "papel", nombre: "Papel higiénico 4 pzas", categoria: "Limpieza", unidad: "paquete", precioMenudeo: 36, precioMayoreo: 29.5 },
 ] as const;
 
 type ClaveProducto = (typeof PRODUCTOS)[number]["clave"];
@@ -155,7 +155,7 @@ async function main() {
   for (const p of PRODUCTOS) {
     const creado = await db.producto.create({
       // Códigos internos de demo; no representan los códigos impresos en empaques reales.
-      data: { nombre: p.nombre, categoria: p.categoria, unidad: p.unidad, precioMenudeo: p.precioMenudeo, codigoBarras: `DEMO-${p.clave.toUpperCase()}` },
+      data: { nombre: p.nombre, categoria: p.categoria, unidad: p.unidad, precioMenudeo: p.precioMenudeo, precioMayoreo: p.precioMayoreo, codigoBarras: `DEMO-${p.clave.toUpperCase()}` },
     });
     productos[p.clave] = { id: creado.id, precioMenudeo: p.precioMenudeo };
   }

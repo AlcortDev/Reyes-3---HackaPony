@@ -162,6 +162,8 @@ model Producto {
   categoria     String
   unidad        String
   precioMenudeo Float
+  // Lo define el ADMIN (catálogo del proveedor). Los tenderos NO lo pueden cambiar [RN-11]. null = aún sin precio.
+  precioMayoreo Float?
   codigoBarras  String?      @unique
   imagen        String?
   inventarios   Inventario[]

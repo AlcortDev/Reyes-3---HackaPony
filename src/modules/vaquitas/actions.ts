@@ -106,15 +106,16 @@ export async function aportarAVaquita(input: {
   return resultado;
 }
 
+// Sin precioMayoreo: el precio NO lo decide el tendero, sale del catálogo (lo define el admin).
+// Zod descarta cualquier precio que mande el cliente.
 const crearSchema = z.object({
   productoId: z.string().min(1),
   proveedor: z.string().trim().min(2).max(100),
   metaUnidades: z.number().int().min(2).max(100_000),
-  precioMayoreo: z.number().positive(),
   cierraEn: z.coerce.date(),
 });
 
-/** [RF-VAQ-06 · RN-11, RN-12] */
+/** [RF-VAQ-06 · RN-11, RN-12] El precio de mayoreo se toma de Producto.precioMayoreo. */
 export async function crearVaquita(input: z.input<typeof crearSchema>): Promise<Resultado<{ id: string }>> {
   try {
     await assertTiendaAprobada();
@@ -126,7 +127,7 @@ export async function crearVaquita(input: z.input<typeof crearSchema>): Promise<
   const datos = crearSchema.safeParse(input);
   if (!datos.success) return fallo("Revisa los datos de la vaquita");
 
-  const { productoId, proveedor, metaUnidades, precioMayoreo, cierraEn } = datos.data;
+  const { productoId, proveedor, metaUnidades, cierraEn } = datos.data;
 
   if (cierraEn.getTime() <= Date.now()) {
     return fallo("La fecha de cierre debe ser en el futuro");
@@ -140,11 +141,14 @@ export async function crearVaquita(input: z.input<typeof crearSchema>): Promise<
       return fallo("Producto no encontrado");
     }
 
+    // El precio de mayoreo viene del catálogo del admin, no del tendero
+    const precioMayoreo = producto.precioMayoreo;
+    if (precioMayoreo == null) {
+      return fallo(`${producto.nombre} todavía no tiene precio de mayoreo. Pídeselo al administrador.`);
+    }
     // [RN-11] precioMayoreo debe ser menor que precioMenudeo
     if (precioMayoreo >= producto.precioMenudeo) {
-      return fallo(
-        `El precio de mayoreo debe ser menor al de menudeo ($${producto.precioMenudeo.toFixed(2)})`,
-      );
+      return fallo(`El precio de mayoreo de ${producto.nombre} no es menor al de menudeo. Avísale al administrador.`);
     }
 
     // [RN-12] Solo puede haber una vaquita ABIERTA por producto a la vez

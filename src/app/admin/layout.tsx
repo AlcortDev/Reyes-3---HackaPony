@@ -1,6 +1,6 @@
 // Solo ADMIN [RNF-SEC-10]
 import Link from "next/link";
-import { BotonReiniciarDemo } from "@/modules/admin";
+import { BotonReiniciarDemo, NavAdmin } from "@/modules/admin";
 import { BotonSalir } from "@/modules/auth";
 import { IconoVaquita, PapelPicado } from "@/shared/components";
 import { requireAdmin } from "@/shared/security";
@@ -24,7 +24,10 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
         </div>
         <PapelPicado alto={18} className="opacity-90" />
       </header>
-      <main className="mx-auto max-w-6xl px-4 pt-6 pb-10 lg:px-8 lg:pt-10">{children}</main>
+      <main className="mx-auto max-w-6xl space-y-6 px-4 pt-6 pb-10 lg:px-8 lg:pt-8">
+        <NavAdmin />
+        {children}
+      </main>
     </>
   );
 }

@@ -12,5 +12,6 @@ export default async function Inicio() {
     where: { usuarioId: sesion.user.id },
     select: { estatusVerificacion: true },
   });
-  redirect(tienda?.estatusVerificacion === "APROBADA" ? "/inventario" : "/perfil");
+  if (!tienda) redirect("/verificar-tienda"); // cuenta nueva: falta verificar la tienda
+  redirect(tienda.estatusVerificacion === "APROBADA" ? "/inventario" : "/perfil");
 }
