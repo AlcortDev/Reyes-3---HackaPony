@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
 import { Toaster } from "sonner";
-import { SCRIPT_SPLASH, Splash } from "@/shared/components/Splash";
+import { Splash } from "@/shared/components/Splash";
+import { SCRIPT_SPLASH } from "@/shared/components/splash-script";
 import "./globals.css";
 
 // Nunito para leer; Baloo 2 para títulos con aire de rótulo de tiendita.
@@ -21,7 +22,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#1f7a3f",
+  themeColor: "#23c71f",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

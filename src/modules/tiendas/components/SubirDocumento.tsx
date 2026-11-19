@@ -75,14 +75,14 @@ export function SubirDocumento({
         htmlFor={id}
         className={cn(
           "flex min-h-28 cursor-pointer items-center gap-4 rounded-lg border-2 border-dashed bg-card p-4 transition-colors hover:border-primary",
-          mensaje ? "border-destructive" : archivo ? "border-primary bg-secondary/50" : "border-input",
+          mensaje ? "border-destructive" : archivo ? "border-primary bg-surface-highlight" : "border-input",
         )}
       >
         {vista ? (
           // eslint-disable-next-line @next/next/no-img-element -- vista previa local (blob:)
           <img src={vista} alt="" className="size-20 shrink-0 rounded-md object-cover" />
         ) : archivo ? (
-          <FileText className="size-12 shrink-0 text-primary" aria-hidden />
+          <FileText className="size-12 shrink-0 text-secondary" aria-hidden />
         ) : (
           <Icono className="size-10 shrink-0 text-muted-foreground" aria-hidden />
         )}
@@ -90,12 +90,12 @@ export function SubirDocumento({
           {archivo ? (
             <>
               <span className="block truncate font-semibold">{archivo.name}</span>
-              <span className="flex items-center gap-1 text-sm text-primary">
+              <span className="flex items-center gap-1 text-sm text-secondary">
                 <RefreshCw className="size-4" aria-hidden /> Toca para cambiarlo
               </span>
             </>
           ) : (
-            <span className="font-semibold text-primary">{camara ? "Tomar foto o elegir archivo" : "Elegir archivo"}</span>
+            <span className="font-semibold text-secondary">{camara ? "Tomar foto o elegir archivo" : "Elegir archivo"}</span>
           )}
         </span>
       </label>

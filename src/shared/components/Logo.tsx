@@ -71,7 +71,7 @@ export function Logo({ className, conTexto = true, claro = false }: { className?
     <span className={cn("inline-flex items-center gap-2", className)}>
       <IconoVaquita />
       {conTexto && (
-        <span className={cn("font-display text-[1.65rem] leading-none font-extrabold tracking-tight", claro ? "text-white" : "text-primary")}>
+        <span className={cn("font-display text-[1.65rem] leading-none font-extrabold tracking-tight", claro ? "text-white" : "text-secondary")}>
           La Vaquita
         </span>
       )}

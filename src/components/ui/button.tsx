@@ -4,29 +4,32 @@ import { cn } from "@/lib/utils"
 import { Slot } from "radix-ui"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-base font-semibold whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-base font-semibold whitespace-nowrap transition-colors duration-150 motion-reduce:transition-none outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-primary text-primary-foreground hover:bg-primary-hover",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary-hover",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-link underline-offset-4 hover:underline",
+        accent: "bg-accent text-accent-foreground hover:bg-accent-strong",
+        stock: "border border-input bg-card text-foreground hover:bg-muted active:bg-surface-highlight",
       },
       size: {
         // La Vaquita: objetivos táctiles ≥ 44 px [RNF-02]
         default: "h-12 px-5 py-2 has-[>svg]:px-4",
-        xs: "h-8 gap-1 rounded-md px-2 text-sm has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
+        xs: "h-11 gap-1 rounded-md px-3 has-[>svg]:px-2 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-11 gap-1.5 rounded-md px-4 has-[>svg]:px-3",
         lg: "h-14 rounded-lg px-6 text-lg has-[>svg]:px-5",
+        stock: "h-16 min-w-11 flex-col gap-1 px-3 [&_svg:not([class*='size-'])]:size-5",
         icon: "size-12",
-        "icon-xs": "size-8 rounded-md [&_svg:not([class*='size-'])]:size-3",
+        "icon-xs": "size-11 rounded-md [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-11",
         "icon-lg": "size-14",
       },

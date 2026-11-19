@@ -141,7 +141,7 @@ flowchart LR
 | :--- | :--- | :---: |
 | **RF-AUT-01** | **Iniciar sesión** con correo y contraseña en `/login`. Al entrar, un ADMIN va a `/admin/tiendas`, un dueño con tienda APROBADA va a `/inventario` y cualquier otro va a `/perfil`. | MUST |
 | **RF-AUT-02** | **Verificación de correo**: al registrarse se envía un link (Mailpit). Sin verificar no se puede iniciar sesión; `/verificar-correo` permite reenviar el link. | MUST |
-| **RF-AUT-03** | **Cerrar sesión** desde el encabezado; revoca la sesión en el servidor. | MUST |
+| **RF-AUT-03** | **Cerrar sesión** desde el menú de cuenta del encabezado en celular y tablet, o desde el menú lateral en PC; revoca la sesión en el servidor. | MUST |
 | **RF-AUT-04** | **Bloqueo por intentos**: con 5 intentos fallidos la cuenta se bloquea 15 min (RN-14), además del límite por IP (RNF-SEC-04). | SHOULD |
 | **RF-AUT-05** | **Recuperar contraseña** en `/recuperar`: pide el correo y siempre responde con el mismo mensaje genérico (RNF-SEC-06). | SHOULD |
 | **RF-AUT-06** | **Restablecer contraseña** en `/restablecer?token=…`: link de un solo uso que expira en 15 min; al cambiarla se cierran todas las sesiones y se avisa por correo. | SHOULD |
@@ -166,7 +166,7 @@ flowchart LR
 | **RF-VER-06** | **Panel de admin** `/admin/tiendas`: solicitudes por estatus; detalle con fotos, documentos, mapa y datos; botones **Aprobar** y **Rechazar** (motivo obligatorio). Se registra quién revisó y cuándo y se avisa al dueño por correo. | MUST |
 | **RF-VER-07** | **Re-subir documentos** desde `/perfil` cuando la tienda fue RECHAZADA; vuelve a PENDIENTE. | SHOULD |
 | **RF-VER-08** | **Suspender / reactivar** una tienda aprobada (motivo obligatorio). | COULD |
-| **RF-TIE-01** | El encabezado muestra el nombre de la tienda actual (de la sesión) y el botón de cerrar sesión. | MUST |
+| **RF-TIE-01** | En celular y tablet, el encabezado muestra el nombre de la tienda actual (de la sesión) como texto y un botón de menú a la derecha. El menú abre un panel con **Mi cuenta** (enlace a `/perfil`) y **Salir**. En PC, el menú lateral conserva el acceso al perfil y el cierre de sesión. El perfil de una tienda APROBADA mantiene esta navegación; las demás tiendas conservan su perfil de revisión independiente. | MUST |
 | **RF-TIE-02** | Toda ruta protegida redirige a `/login` si no hay sesión (middleware) y a `/perfil` si la tienda no está APROBADA (layout + guard). | MUST |
 | **RF-TIE-03** | Página `/privacidad` con el aviso de privacidad: qué datos se piden, para qué y cuánto tiempo se guardan. | MUST |
 | **RF-TIE-04** | Una navegación inferior fija da acceso a **Inventario · Vaquitas · Ahorro**, resaltando la sección activa. | MUST |
@@ -209,7 +209,7 @@ flowchart LR
 | **RF-VAQ-03** | Mostrar en el detalle la **lista de aportaciones por tienda** (quién puso cuánto). | MUST |
 | **RF-VAQ-04** | Cuando lo aportado alcanza la meta, la vaquita pasa a **COMPLETA** automáticamente (RN-06) y ya no acepta aportaciones. | MUST |
 | **RF-VAQ-05** | **Tiempo casi real:** el detalle de la vaquita se actualiza solo (polling cada ≤ 2 s) para que otra pantalla vea subir la barra sin recargar. | MUST |
-| **RF-VAQ-06** | **Crear** una vaquita: producto, proveedor, meta de unidades y fecha de cierre. El **precio de mayoreo NO lo captura el tendero**: se toma de `Producto.precioMayoreo` (catálogo del admin) y se muestra solo para leer, con el ahorro por unidad. Un producto sin precio de mayoreo no permite armar vaquita. | SHOULD |
+| **RF-VAQ-06** | **Crear** una vaquita: producto, proveedor, meta de unidades y fecha de cierre. El **precio de mayoreo NO lo captura el tendero**: se toma de `Producto.precioMayoreo` (catálogo del admin) y se muestra solo para leer, con el ahorro por unidad. Un producto sin precio de mayoreo no permite armar vaquita. El formulario abre en un diálogo modal tanto en móvil como en PC, también al llegar con un producto precargado desde inventario. | SHOULD |
 | **RF-ADM-01** | **Precios de mayoreo** en `/admin/productos`: el admin fija `precioMayoreo` de cada producto del catálogo (menor al de menudeo, RN-11). Queda en la bitácora (`PRECIO_MAYOREO_ACTUALIZADO`). | SHOULD |
 | **RF-VAQ-07** | Celebración al completar: **confeti** + "¡Precio de mayoreo desbloqueado!". | SHOULD |
 | **RF-VAQ-08** | **Cuenta regresiva** al cierre; al vencer sin completar, la vaquita pasa a CERRADA (RN-08). | SHOULD |
@@ -920,6 +920,7 @@ export function resubirDocumentos(formData: FormData): Promise<Resultado>; // RF
 export function getMiTienda(): Promise<MiTiendaDTO | null>;              // tienda del usuario en sesión, con estatus y motivo
 export function getTiendaActual(): Promise<TiendaDTO | null>;            // tienda APROBADA de la sesión
 export { RegistroCuenta, VerificacionTienda, PerfilTienda, BannerEstatus, HeaderTienda } from "./components";
+export function EstructuraTienda(props: { nombre: string; children: React.ReactNode }): React.JSX.Element; // estructura visual; el consumidor valida el acceso
 ```
 
 #### `@/modules/admin`
@@ -949,7 +950,16 @@ export function registrarMovimiento(input: {
 export function getProductosParaAgregar(tiendaId: string): Promise<ProductoParaAgregarDTO[]>; // RF-INV-11: catálogo que la tienda aún no tiene
 export function agregarProductoAlInventario(input: AltaInventarioInput): Promise<Resultado<{ inventarioId: string; nombre: string }>>; // RF-INV-11
 
+/** Conteo físico: escribe el total y registra solo la diferencia en una transacción.
+ * Autoriza la tienda de sesión, valida un entero entre 0 y 1,000,000 y rechaza
+ * el ajuste si cambia el stock durante la escritura; no genera movimiento si coincide. */
+export function ajustarExistencias(input: {
+  inventarioId: string;
+  existencias: number;
+}): Promise<Resultado<{ stock: number }>>;
+
 // logic.ts (puras)
+export function movimientoParaAjuste(stockActual: number, existencias: number): { tipo: "ENTRADA" | "SALIDA"; cantidad: number } | null;
 export function nivelStock(stock: number, stockMinimo: number): NivelStock;          // RN-01
 export function diasParaAgotarse(stock: number, salidasUltimos7Dias: number): number | null; // RN-07
 

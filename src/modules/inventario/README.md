@@ -38,9 +38,9 @@ Una venta rechazada refresca los datos. Si se pierde una confirmación, se bloqu
 | `camara.ts` | Liberación de tracks y validación de sesión de captura |
 | `components/LectorCodigo.tsx` | Cámara, decodificación local y captura manual |
 | `oportunidad.ts` | Rechaza ofertas vencidas, completas o de otro producto |
-| `components/inventario.module.css` | Estilos locales, paleta y controles táctiles |
+| `src/app/globals.css` | Tokens globales de marca, roles semánticos y utilidades Tailwind 4 |
 
-La ruta `src/app/(app)/inventario/[id]/page.tsx` permanece delgada. El módulo no modifica la barra de navegación ni el estilo global de Sebastían.
+La ruta `src/app/(app)/inventario/[id]/page.tsx` permanece delgada. La actualización de frontend autorizada centraliza el tema en `src/app/globals.css`, reutiliza componentes shadcn y elimina la paleta duplicada del CSS local. La navegación conserva sus rutas y usa tokens semánticos. Ver `docs/design/README.md` para la paleta y la revisión de componentes.
 
 ## Verificación
 
@@ -66,13 +66,13 @@ Comprobado en esta entrega: **88 pruebas aprobadas**, incluidas siete con Postgr
 
 Se generaron `.env` y `.env.compose.local` con permisos 0600, ambos ignorados por Git. Las claves y contraseñas no se incluyen en el PR. Se usa un volumen nuevo de La Vaquita, separado de otros proyectos.
 
-- Aplicación: `http://localhost:3100` (el puerto 3000 corresponde a otro proyecto).
+- Aplicación: `http://localhost:3001` (el puerto 3000 corresponde a otro proyecto).
 - PostgreSQL 16: `127.0.0.1:55432`.
 - Buzón Mailpit: `http://localhost:8025`.
 
 ```bash
 docker compose -p lavaquita_alvaro -f docker-compose.yml -f .env.compose.local up -d postgres mailpit
-npm run dev -- -H 127.0.0.1 -p 3100
+npm run dev -- -H 127.0.0.1 -p 3001
 ```
 
 La migración inicial y el seed se aplicaron a esta base nueva. Las cuentas demo usan la contraseña `SEED_DEMO_PASSWORD` de `.env`; no pegarla en chats ni commits. Para probar la captura manual puede escribirse `DEMO-COCA`. Los códigos `DEMO-*` son internos y no corresponden a empaques reales; el catálogo puede asociar sus códigos reales mediante el campo existente `Producto.codigoBarras`.
@@ -86,3 +86,9 @@ La migración inicial y el seed se aplicaron a esta base nueva. Las cuentas demo
 - Se conserva el lockfile del equipo y se agrega `html5-qrcode` 2.3.8, previsto en docs/plan.md; no se cambia de framework.
 - Compatibilidad necesaria: formato de plugins de PostCSS; se conservaron las correcciones de `Uint8Array` de Hiram; zona `America/Mexico_City` en `formatoFechaHora` para evitar diferencias de hidratación.
 - `npm audit` del 19 de noviembre de 2026 reportó **11 vulnerabilidades: 2 críticas, 7 altas y 2 moderadas** en el árbol heredado. Incluye Vitest/tinypool, Nodemailer, Zod, sharp, PostCSS y dependencias de Prisma. Varias correcciones propuestas requieren versiones mayores; coordinar la actualización con el equipo, respetando el stack acordado. No se ejecutó `npm audit fix --force`.
+
+## Actualización de diseño del 19 de noviembre
+
+Se integró el diseño de main e230d9d y se aplicó la paleta solicitada mediante Tailwind y shadcn. El inventario conserva dos columnas en PC y la interfaz móvil. Las comprobaciones de frontend aprobaron 102 pruebas, typecheck y lint; las siete pruebas con base real se omitieron en esta revisión. El build integrado pasó y el mockup se revisó a 360, 390 y 1280 px. Las evidencias de esta actualización están en `docs/design/`, separadas de la validación de base y cámara de la entrega anterior.
+
+La integración posterior de main bbe1565 conserva la captura de cantidad inicialmente vacía, la selección del número al enfocar y el conteo físico «Tengo N en total»: registra solo la diferencia, permite cero y rechaza sobrescribir un movimiento concurrente. Las comprobaciones posteriores aprobaron 115 pruebas, typecheck y lint; las siete pruebas de base real quedaron omitidas.
