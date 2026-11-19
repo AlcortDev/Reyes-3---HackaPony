@@ -1,5 +1,11 @@
+import { Suspense } from "react";
 import { VerificarCorreo } from "@/modules/auth";
 
-export default function VerificarCorreoPage() {
-  return <VerificarCorreo />;
+// useSearchParams necesita Suspense en páginas estáticas
+export default function Page() {
+  return (
+    <Suspense>
+      <VerificarCorreo />
+    </Suspense>
+  );
 }
