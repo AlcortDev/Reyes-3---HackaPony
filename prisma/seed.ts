@@ -154,7 +154,8 @@ async function main() {
   const productos = {} as Record<ClaveProducto, { id: string; precioMenudeo: number }>;
   for (const p of PRODUCTOS) {
     const creado = await db.producto.create({
-      data: { nombre: p.nombre, categoria: p.categoria, unidad: p.unidad, precioMenudeo: p.precioMenudeo },
+      // Códigos internos de demo; no representan los códigos impresos en empaques reales.
+      data: { nombre: p.nombre, categoria: p.categoria, unidad: p.unidad, precioMenudeo: p.precioMenudeo, codigoBarras: `DEMO-${p.clave.toUpperCase()}` },
     });
     productos[p.clave] = { id: creado.id, precioMenudeo: p.precioMenudeo };
   }
