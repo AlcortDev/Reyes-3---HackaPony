@@ -4,6 +4,7 @@ export interface VaquitaDTO {
   id: string;
   productoId: string;
   producto: string;
+  unidad?: string;
   proveedor: string;
   metaUnidades: number;
   totalAportado: number;
@@ -33,4 +34,13 @@ export interface AportacionDTO {
   precioMenudeo: number;
   precioMayoreo: number;
   estado: EstadoCanasta;
+}
+
+export interface ProductoCatalogoDTO {
+  id: string;
+  nombre: string;
+  categoria: string;
+  unidad: string;
+  precioMenudeo: number;
+  tieneVaquitaAbierta: boolean;
 }
