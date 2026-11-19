@@ -92,6 +92,45 @@ export async function rechazarTienda(tiendaId: string, motivo: string): Promise<
   return ok(undefined);
 }
 
+/** [RF-VER-08 · RN-16] SUSPENDIDA → APROBADA. */
+export async function reactivarTienda(tiendaId: string): Promise<Resultado> {
+  const admin = await assertAdmin();
+  const tienda = await db.tienda.findUnique({
+    where: { id: tiendaId },
+    include: { usuario: true },
+  });
+  if (!tienda) return fallo("Tienda no encontrada");
+  if (tienda.estatusVerificacion !== "SUSPENDIDA") {
+    return fallo("Solo se pueden reactivar tiendas suspendidas");
+  }
+
+  await db.tienda.update({
+    where: { id: tiendaId },
+    data: {
+      estatusVerificacion: "APROBADA",
+      motivoRechazo: null,
+      revisadaEn: new Date(),
+      revisadaPorId: admin.user.id,
+    },
+  });
+
+  await registrarEvento("TIENDA_REACTIVADA", {
+    exito: true,
+    userId: admin.user.id,
+    objetivo: tienda.id,
+  });
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  await enviarCorreo("tiendaAprobada", tienda.usuario.email, {
+    nombre: tienda.encargado,
+    tienda: tienda.nombre,
+    url: `${appUrl}/login`,
+  });
+
+  revalidatePath("/admin/tiendas");
+  return ok(undefined);
+}
+
 /** [RF-VER-08 · COULD] */
 export async function suspenderTienda(tiendaId: string, motivo: string): Promise<Resultado> {
   const admin = await assertAdmin();

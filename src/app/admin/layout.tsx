@@ -1,5 +1,6 @@
 // Solo ADMIN [RNF-SEC-10]
 import Link from "next/link";
+import { BotonReiniciarDemo } from "@/modules/admin";
 import { BotonSalir } from "@/modules/auth";
 import { Logo } from "@/shared/components";
 import { requireAdmin } from "@/shared/security";
@@ -14,7 +15,10 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
             <Logo conTexto={false} />
             <span className="text-lg font-bold">Administración</span>
           </Link>
-          <BotonSalir />
+          <div className="flex items-center gap-1">
+            <BotonReiniciarDemo />
+            <BotonSalir />
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-3xl p-4">{children}</main>

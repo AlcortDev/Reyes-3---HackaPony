@@ -1,6 +1,7 @@
 "use client";
-// [RF-VER-06, RF-VER-08 · RN-16] Botones de decisión del admin. Servidor: aprobarTienda / rechazarTienda / suspenderTienda (Hiram).
-import { Ban, Check, X } from "lucide-react";
+// [RF-VER-06, RF-VER-08 · RN-16] Botones de decisión del admin.
+// Servidor: aprobarTienda / rechazarTienda / suspenderTienda / reactivarTienda (Hiram).
+import { Ban, Check, RotateCcw, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,10 +18,67 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { EstatusVerificacion } from "@/shared/types";
-import { aprobarTienda, rechazarTienda, suspenderTienda } from "../actions";
+import type { EstatusVerificacion, Resultado } from "@/shared/types";
+import { aprobarTienda, reactivarTienda, rechazarTienda, suspenderTienda } from "../actions";
 
 const MIN_MOTIVO = 5; // igual que motivoSchema
+const ERROR_INESPERADO = "No se pudo completar. Revisa que sigas con sesión de admin e intenta de nuevo.";
+
+/** Ejecuta la acción y SIEMPRE devuelve true/false (nunca deja el botón trabado si el servidor lanza error). */
+function useEjecutar() {
+  const router = useRouter();
+  return async (accion: () => Promise<Resultado>, exito: string): Promise<boolean> => {
+    try {
+      const r = await accion();
+      if (!r.ok) {
+        toast.error(r.error);
+        return false;
+      }
+      toast.success(exito);
+      router.push("/admin/tiendas");
+      router.refresh();
+      return true;
+    } catch {
+      toast.error(ERROR_INESPERADO);
+      return false;
+    }
+  };
+}
+
+function BotonAccion({
+  texto,
+  textoCargando,
+  Icono,
+  variante = "default",
+  onClick,
+}: {
+  texto: string;
+  textoCargando: string;
+  Icono: typeof Check;
+  variante?: "default" | "outline";
+  onClick: () => Promise<boolean>;
+}) {
+  const [cargando, setCargando] = useState(false);
+  return (
+    <Button
+      size="lg"
+      variant={variante}
+      className="flex-1"
+      disabled={cargando}
+      onClick={async () => {
+        setCargando(true);
+        try {
+          await onClick();
+        } finally {
+          setCargando(false);
+        }
+      }}
+    >
+      <Icono className="size-5" aria-hidden />
+      {cargando ? textoCargando : texto}
+    </Button>
+  );
+}
 
 function DialogoMotivo({
   titulo,
@@ -67,7 +125,9 @@ function DialogoMotivo({
             rows={4}
             placeholder="Ej. La foto del comprobante no se lee. Sube una más clara."
           />
-          <p className="text-sm text-muted-foreground">{motivo.trim().length}/500 · mínimo {MIN_MOTIVO} caracteres</p>
+          <p className="text-sm text-muted-foreground">
+            {motivo.trim().length}/500 · mínimo {MIN_MOTIVO} caracteres
+          </p>
         </div>
         <DialogFooter className="gap-2">
           <DialogClose asChild>
@@ -78,9 +138,11 @@ function DialogoMotivo({
             disabled={!valido || enviando}
             onClick={async () => {
               setEnviando(true);
-              const ok = await onConfirmar(motivo.trim());
-              setEnviando(false);
-              if (ok) setAbierto(false);
+              try {
+                if (await onConfirmar(motivo.trim())) setAbierto(false);
+              } finally {
+                setEnviando(false);
+              }
             }}
           >
             {enviando ? "Guardando…" : textoBoton}
@@ -92,43 +154,26 @@ function DialogoMotivo({
 }
 
 export function DecisionTienda({ tiendaId, estatus }: { tiendaId: string; estatus: EstatusVerificacion }) {
-  const router = useRouter();
-  const [aprobando, setAprobando] = useState(false);
-
-  async function resultado(r: { ok: true } | { ok: false; error: string }, exito: string) {
-    if (!r.ok) {
-      toast.error(r.error);
-      return false;
-    }
-    toast.success(exito);
-    router.push("/admin/tiendas");
-    router.refresh();
-    return true;
-  }
+  const ejecutar = useEjecutar();
 
   if (estatus === "PENDIENTE") {
     return (
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button
-          size="lg"
-          className="flex-1"
-          disabled={aprobando}
-          onClick={async () => {
-            setAprobando(true);
-            await resultado(await aprobarTienda(tiendaId), "Tienda aprobada. Le avisamos por correo.");
-            setAprobando(false);
-          }}
-        >
-          <Check className="size-5" aria-hidden />
-          {aprobando ? "Aprobando…" : "Aprobar tienda"}
-        </Button>
+        <BotonAccion
+          texto="Aprobar tienda"
+          textoCargando="Aprobando…"
+          Icono={Check}
+          onClick={() => ejecutar(() => aprobarTienda(tiendaId), "Tienda aprobada. Le avisamos por correo.")}
+        />
         <DialogoMotivo
           titulo="Rechazar tienda"
           descripcion="El dueño verá el motivo en su perfil y podrá volver a subir sus documentos."
           textoBoton="Rechazar"
           variante="destructive"
           Icono={X}
-          onConfirmar={async (motivo) => resultado(await rechazarTienda(tiendaId, motivo), "Tienda rechazada. Le avisamos por correo.")}
+          onConfirmar={(motivo) =>
+            ejecutar(() => rechazarTienda(tiendaId, motivo), "Tienda rechazada. Le avisamos por correo.")
+          }
         />
       </div>
     );
@@ -142,7 +187,18 @@ export function DecisionTienda({ tiendaId, estatus }: { tiendaId: string; estatu
         textoBoton="Suspender"
         variante="outline"
         Icono={Ban}
-        onConfirmar={async (motivo) => resultado(await suspenderTienda(tiendaId, motivo), "Tienda suspendida.")}
+        onConfirmar={(motivo) => ejecutar(() => suspenderTienda(tiendaId, motivo), "Tienda suspendida.")}
+      />
+    );
+  }
+
+  if (estatus === "SUSPENDIDA") {
+    return (
+      <BotonAccion
+        texto="Reactivar tienda"
+        textoCargando="Reactivando…"
+        Icono={RotateCcw}
+        onClick={() => ejecutar(() => reactivarTienda(tiendaId), "Tienda reactivada. Le avisamos por correo.")}
       />
     );
   }

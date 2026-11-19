@@ -14,6 +14,7 @@ export type EventoAuditoria =
   | "TIENDA_APROBADA"
   | "TIENDA_RECHAZADA"
   | "TIENDA_SUSPENDIDA"
+  | "TIENDA_REACTIVADA"
   | "DOCS_RESUBIDOS"
   | "DOC_VISTO"
   | "DEMO_REINICIADA";
