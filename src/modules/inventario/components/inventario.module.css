@@ -1,12 +1,13 @@
 .modulo {
-  --inv-primario: #23c71f;
-  --inv-secundario: #276e29;
-  --inv-suave: #d6f2cb;
-  --inv-acento: #2479b5;
-  --inv-acento-fuerte: #4b6194;
-  --inv-texto: #253329;
-  --inv-muted: #536157;
-  --inv-borde: #d8dfd6;
+  /* Alineado con el tema global (src/app/globals.css) */
+  --inv-primario: var(--primary);
+  --inv-secundario: var(--primary);
+  --inv-suave: var(--secondary);
+  --inv-acento: var(--primary);
+  --inv-acento-fuerte: var(--primary-oscuro);
+  --inv-texto: var(--foreground);
+  --inv-muted: var(--muted-foreground);
+  --inv-borde: var(--border);
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -56,7 +57,7 @@
 .formCantidad input { width: 100%; min-height: 48px; border: 1px solid var(--inv-borde); border-radius: 6px; padding: 10px 12px; background: white; }
 .accionesCantidad { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .botonPrimario, .botonSecundario { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 6px; padding: 10px 12px; text-align: center; }
-.botonPrimario { background: var(--inv-primario); color: #123b16; border: 1px solid transparent; font-weight: 600; }
+.botonPrimario { background: var(--inv-primario); color: var(--primary-foreground); border: 1px solid transparent; font-weight: 600; }
 .botonSecundario { background: white; border: 1px solid var(--inv-borde); color: var(--inv-secundario); }
 .avisoError { padding: 12px; border: 1px solid #e5b3a6; border-radius: 8px; background: #fff6f2; color: #8d3023; }
 .vacio { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 26px 18px; background: white; border: 1px solid var(--inv-borde); border-radius: 10px; }
@@ -84,4 +85,20 @@
 @media (prefers-reduced-motion: no-preference) {
   .botonStock, .botonPrimario, .botonSecundario { transition: background-color .15s ease-out, border-color .15s ease-out; }
   .botonStock:not(:disabled):active { background: var(--inv-suave); }
+}
+
+/* ── Tema La Vaquita (Sebastían): tarjetas con la misma sombra y radio que el resto de la app ── */
+.modulo h1 { font-size: 32px; font-weight: 800; }
+.tarjeta, .lector, .vacio, .oportunidad { border-radius: 16px; box-shadow: var(--sombra-tarjeta); }
+.buscador, .botonStock, .botonPrimario, .botonSecundario, .formCantidad input, .cerrarLector { border-radius: 12px; }
+.alertaStock { border-radius: 12px; border: 1px solid #f3d9a8; font-weight: 600; }
+.existencias strong { font-family: var(--font-display); font-weight: 800; }
+
+/* ── PC: dos columnas de tarjetas y filtros en una fila ── */
+@media (min-width: 1024px) {
+  .filtros { flex-direction: row; align-items: center; gap: 16px; }
+  .filtros .buscador { flex: 1; }
+  .lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+  .tarjeta { display: flex; flex-direction: column; height: 100%; }
+  .tarjeta .verDetalle { margin-top: auto; }
 }
